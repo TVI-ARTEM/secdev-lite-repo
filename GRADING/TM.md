@@ -43,7 +43,7 @@ flowchart LR
 
   subgraph External[Внешние провайдеры]
     PSP[Payment Provider]
-    TAX[Tax/VAT Service]
+    TAX[Tax Service]
     SHP[Shipping Aggregator]
   end
 
