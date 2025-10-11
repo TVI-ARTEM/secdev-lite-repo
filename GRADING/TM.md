@@ -21,7 +21,7 @@
 - **Internet:** UI клиент (U)
 - **DMZ:** API Gateway/Ingress (A)
 - **Internal:** Catalog & Prices (S), PostgreSQL (D)
-- **External:** PSP, TAX, SHP
+- **External:** Платёжный провайдер (PSP), Налоговый провайдер (TAX), Агрегатор доставки (SHP)
 
 1.3. Context/DFD:
 
