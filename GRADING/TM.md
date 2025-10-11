@@ -51,9 +51,9 @@ flowchart LR
   U -- "JWT/HTTPS [NFR: AuthN, RateLimit]" --> A
   A -->|"REST DTO [NFR: API-Contract/Errors]"| S
   S -->|"SQL/ORM [NFR: Data-Integrity]"| D
-  S -->|"payment data [NFR: Timeout/Retry/CB]"| PSP
-  S -->|"tax calculation [NFR: Timeout/Retry/CB]"| TAX
-  S -->|"shipping rates [NFR: Timeout/Retry/CB]"| SHP
+  S -->|"payment data/gRPC [NFR: Timeout/Retry/CB]"| PSP
+  S -->|"tax calculation/gRPC [NFR: Timeout/Retry/CB]"| TAX
+  S -->|"shipping rates/gRPC [NFR: Timeout/Retry/CB]"| SHP
 
   %% --- Webhooks обратно ---
   PSP -- "signed webhooks [NFR: Allowlist, Idempotency]" --> A
