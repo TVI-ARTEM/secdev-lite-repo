@@ -268,7 +268,7 @@ flowchart LR
 - **Trade-offs:** чаще `401` при истекших токенах; +операционная сложность ротации; +незначительная латентность двойной проверки.
 - **DoD:** истёкший/подделанный токен -> **401**; валидный -> **200** с `X-User-Id`; тест «неожиданный alg» провален; журнал `auth.token_invalid` присутствует.
 - **Owner:** Security Engineer
-- **Evidence:** `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`, `EVIDENCE/auth.invalid_token.ndjson`
+- **Evidence:** `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`, `EVIDENCE/auth.token_invalid.ndjson`
 
 #### ADR-002 — Public Edge Rate-Limiting + Timeouts/Retry + Circuit Breaker
 - **Context:** T05, NFR-2; публичные endpoint’ы (U->A), исходящие к PSP/TAX/SHP
@@ -309,7 +309,7 @@ flowchart LR
 
 | Threat | NFR    | ADR     | Чем проверяем (план/факт)                                                                                                 |
 |------:|--------|---------|-----------------------------------------------------------------------------------------------------------------------------|
-| T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`), Postman коллекция `EVIDENCE/postman-tenat-negative.json`; логи отказов `EVIDENCE/access.denied.ndjson` |
+| T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`); логи отказов `EVIDENCE/access.denied.ndjson` |
 | T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit`; графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
 | T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
 | T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
