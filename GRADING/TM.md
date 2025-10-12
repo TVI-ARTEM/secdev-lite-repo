@@ -61,7 +61,7 @@ flowchart LR
   A -->|"webhook events"| S
 
   %% --- Границы оформления ---
-  classDef boundary fill:#f6f6f6,stroke:#999,stroke-width:1px;
+  classDef boundary fill:#363636,stroke:#999,stroke-width:1px;
   class Internet,DMZ,Service,External boundary;
 
 
