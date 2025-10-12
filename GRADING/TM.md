@@ -4,7 +4,7 @@
 
 ## 0) Мета
 
-- **Описание:** селлерская часть маркетплейса: веб-кабинет и API для управления товарами/остатками/ценами/скидками, с интеграциями во внешние провайдеры (платёж/выплаты, налоги). Используют продавцы и модераторы/админы.
+- **Описание:** селлерская часть маркетплейса: веб-кабинет и API для управления товарами/остатками/ценами/скидками, с интеграциями во внешние провайдеры (платёж/выплаты, налоги). Используют продавцы.
 - **Группа:** Беловицкий Владислав, Жулин Артем, Кочнев Виктор, Сергеев Илья, Сидоренков Олег 
 
 ---
@@ -13,7 +13,7 @@
 
 1.1 Роли и активы:
 
-- **Акторы:** Продавец, Модератор.
+- **Акторы:** Продавец.
 - **Активы:** Каталог (SKU), цены и скидки, идентификаторы и секреты (JWT/refresh, API-токены, webhook-секреты), аудит, ПДн (PII).
 
 1.2 Зоны доверия:
@@ -68,7 +68,7 @@ flowchart LR
 ```
 1.4 Критичные интерфейсы
 
-**1. Интернет -> API Gateway/Ingress (U -> A)**  
+**1. UI клиент -> API Gateway/Ingress (U -> A)**  
 **Данные:** JWT, PII, DTO.  
 **Риски:** Broken AuthN/AuthZ, инъекции, утечки через ошибки, CORS‑misconfig, DoS.  
 **Контроль:**
@@ -130,7 +130,7 @@ flowchart LR
 7. **Ошибки API:** для лимитов — **429 + Retry‑After**, по возможности — заголовки RateLimit‑*.  
 8. **Секреты:** не хранятся в коде.  
 9. **База данных:** включает **RLS** для изоляции аредотатора; все обращения параметризованы/через ORM.  
-10. **Наблюдаемость:** на всех CI‑ребрах передаётся и логируется `correlation_id`; аудит админ‑действий ведётся независимо от приложенческих логов.  
+10. **Наблюдаемость:** на всех CI‑ребрах передаётся и логируется `correlation_id`.
 11. **Минимизация PII:** наружу (TAX/SHP/PSP) передаются только необходимые поля; PII в логах маскируется.  
 12. **Квоты и ограничения:** публичные эндпойнты имеют пороги RPS/размеров тел; превышение ведёт к 413/429 по политике.
 
@@ -177,7 +177,7 @@ flowchart LR
    - **Частота:** Часто при публичных API без лимитов.  
    - **Чувствительность:** Ведёт к простоям, нарушению SLA, финансовым потерям.  
    - **Обнаружимость:** Видно по росту P95/5xx и алертам. 
-   - **Решение:** **Rate-Limiting 429 + Retry-After/RateLimit-***, лимиты тела, пулы; **timeouts + ограниченные retries**, для внешних - **Circuit Breaker**.
+   - **Решение:** **Rate-Limiting 429 + Retry-After/RateLimit**, лимиты тела, пулы; **timeouts + ограниченные retries**, для внешних - **Circuit Breaker**.
 
 3. **T01 — Подмена личности через JWT** — **L*I=15**  
    - **Экспозиция:** все write-операции. 
@@ -206,7 +206,7 @@ flowchart LR
 
 ### NFR-1. Аутентификация и защита токенов (JWT)
 **Покрывает:** T01  
-**Requirement:** Все write/privileged-эндпойнты принимают только валидный **JWT**; проверяются `iss`, `aud`, `exp`, `nbf`; **TTL access <= <30m>**, refresh по отдельному потоку; ответы об ошибках в формате **Problem Details** (`application/problem+json`).  
+**Requirement:** Все write/privileged-эндпойнты принимают только валидный **JWT**; проверяются `iss`, `aud`, `exp`, `nbf`; **TTL access <= 30m**, refresh по отдельному потоку; ответы об ошибках в формате **Problem Details** (`application/problem+json`).  
 **Acceptance (G-W-T):**  
 - **Given** валидный токен, **When** `POST /api/<write>`, **Then** `200` и заголовок `X-User-Id=<subject>`.  
 - **Given** токен с истёкшим `exp`/неверным `aud`, **When** любой запрос, **Then** `401` и тело с `type/title/status/detail`.
@@ -215,12 +215,12 @@ flowchart LR
 
 ---
 
-### NFR-2. Лимиты, 429 и устойчивые исходящие (timeouts/retry/jitter/CB)
+### NFR-2. Лимиты, 429 и устойчивые исходящие (timeouts/retry/CB)
 **Покрывает:** T05  
-**Requirement:** На публичных API: <= **5 rps** на токен и <= **5 rps** на IP; при превышении — **429 + Retry-After** и **RateLimit-\*** заголовки. Для исходящих к PSP/TAX/SHP: **timeout <= <2s>**, **retry <= 3** с **экспоненциальным ростом**, **circuit breaker** при error-rate **>=50%** за **1 мин**.  
+**Requirement:** На публичных API: <= **5 rps** на токен и <= **5 rps** на IP; при превышении — **429 + Retry-After** и **RateLimit** заголовки. Для исходящих к PSP/TAX/SHP: **timeout <= 2s**, **retry <= 3** с **экспоненциальным ростом**, **circuit breaker** при error-rate **>=50%** за **1 мин**.  
 **Acceptance (G-W-T):**  
-- **Given** `10К` запросов за 60s, **When** `POST /api/<endpoint>`, **Then** 429 с `Retry-After` и `RateLimit-*`.  
-- **Given** недоступность `PSP/TAX/SHP`, **When** вызов из сервиса, **Then** суммарное ожидание <= **<6s>**, попыток <= 3, circuit-breaker открыт.
+- **Given** `10К` запросов за 60s, **When** `POST /api/<endpoint>`, **Then** 429 с `Retry-After` и `RateLimit`.  
+- **Given** недоступность `PSP/TAX/SHP`, **When** вызов из сервиса, **Then** суммарное ожидание <= **6s**, попыток <= 3, circuit-breaker открыт.
 
 **Evidence:** e2e-тест 429; интеграционный тест деградации внешнего API; метрики P95/5xx/CB-state.
 
@@ -250,7 +250,7 @@ flowchart LR
 
 ### NFR-5. Idempotency для платежей (PSP)
 **Покрывает:** T14  
-**Requirement:** Для `POST /api/payments/*` обязателен `Idempotency-Key`; окно хранения результатов ≤ **<24h>**; повторы с тем же ключом возвращают идентичный ответ без дублей транзакций; детерминированность по `(ключ, тело)`.  
+**Requirement:** Для `POST /api/payments/*` обязателен `Idempotency-Key`; окно хранения результатов ≤ **24h**; повторы с тем же ключом возвращают идентичный ответ без дублей транзакций; детерминированность по `(ключ, тело)`.  
 **Acceptance (G-W-T):**  
 - **Given** тот же `Idempotency-Key` и тело, **When** повторный `POST /api/payments/session`, **Then** ответ 200/201 с тем же `payment_id`, без нового списания.  
 - **Given** истёкшее окно хранения, **When** тот же запрос, **Then** создаётся новая сессия и лог `idempotency.expired`.
@@ -263,18 +263,18 @@ flowchart LR
 
 
 #### ADR-001 — JWT TTL + Refresh + JWKS Rotation
-- **Context (угрозы/NFR):** T01, NFR-1; контур AUTH (U->A, A->S)
-- **Decision:** проверка подписи и claims (`iss/aud/exp/nbf`) на GW и в сервисе; **access TTL <= <30m>**, отдельный refresh-поток; **JWKS ротация ключей**; запрет `alg=none`; отказ только в **Problem Details**.
-- **Trade-offs (кратко):** чаще `401` при истекших токенах; +операционная сложность ротации; +незначительная латентность двойной проверки.
-- **DoD (готовность):** истёкший/подделанный токен -> **401**; валидный -> **200** с `X-User-Id`; тест «неожиданный alg» провален; журнал `auth.token_invalid` присутствует.
+- **Context:** T01, NFR-1; контур AUTH (U->A, A->S)
+- **Decision:** проверка подписи и claims (`iss/aud/exp/nbf`) на GW и в сервисе; **access TTL <= 30m**, отдельный refresh-поток; **JWKS ротация ключей**; запрет `alg=none`; отказ только в **Problem Details**.
+- **Trade-offs:** чаще `401` при истекших токенах; +операционная сложность ротации; +незначительная латентность двойной проверки.
+- **DoD:** истёкший/подделанный токен -> **401**; валидный -> **200** с `X-User-Id`; тест «неожиданный alg» провален; журнал `auth.token_invalid` присутствует.
 - **Owner:** Security Engineer
 - **Evidence:** `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`, `EVIDENCE/auth.invalid_token.ndjson`
 
 #### ADR-002 — Public Edge Rate-Limiting + Timeouts/Retry + Circuit Breaker
 - **Context:** T05, NFR-2; публичные endpoint’ы (U->A), исходящие к PSP/TAX/SHP
-- **Decision:** rate-limit на GW: <= **5 rps/uid**, <= **5 rps/ip**, ответы **429 + Retry-After + RateLimit-*;** на исходящих: **timeout <= <2s>**, **retry <= 3** (exponential backoff + jitter), **CB** при error-rate >= **50%/1m**; backpressure/ограничение пула.
+- **Decision:** rate-limit на GW: <= **5 rps/uid**, <= **5 rps/ip**, ответы **429 + Retry-After + RateLimit;** на исходящих: **timeout <= <2s>**, **retry <= 3** (экспоненциальный рост), **CB** при error-rate >= **50%/1m**; backpressure/ограничение пула.
 - **Trade-offs:** возможные **429** влияют на UX; риск ложных блокировок (NAT); ретраи повышают фон трафика.
-- **DoD:** при > **<N> rps** стабильно возвращается **429**; при деградации внешнего API суммарное ожидание <= **<6s>**, CB открывается; **P95 <= <T>s** под целевой нагрузкой.
+- **DoD:** при > **<N> rps** стабильно возвращается **429**; при деградации внешнего API суммарное ожидание <= **6s**, CB открывается; **P95 <= <T>s** под целевой нагрузкой.
 - **Owner:** SRE
 - **Evidence:** `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png`
 
@@ -286,7 +286,7 @@ flowchart LR
 - **Owner:** Backend Lead
 - **Evidence:** `EVIDENCE/e2e-tenant-isolation.spec.ts`, `EVIDENCE/access.denied.ndjson`
 
-#### ADR-004 — PostgreSQL RLS Policies per Tenant (ENABLE RLS + NO BYPASSRLS)
+#### ADR-004 — PostgreSQL RLS Policies per Tenant
 - **Context:** T17, NFR-4; S<->D (PostgreSQL)
 - **Decision:** `ENABLE ROW LEVEL SECURITY` на таблицах tenant-данных; политики `FOR SELECT/INSERT/UPDATE/DELETE` с проверкой `tenant_id = current_setting('app.tenant_id')`; роль приложения без `BYPASSRLS`; установка tenant в сессии при коннекте.
 - **Trade-offs:** усложнение миграций/отладки; небольшой overhead; необходимость строгой передачи tenant в БД.
@@ -295,9 +295,9 @@ flowchart LR
 - **Evidence:** `EVIDENCE/rls-policies.sql`, `EVIDENCE/rls-unit.spec.sql`, `EVIDENCE/psql-explain.txt`
 
 
-#### ADR-005 — Payment Idempotency Keys (детерминированные повторы)
+#### ADR-005 — Payment Idempotency Keys
 - **Context:** T14, NFR-5; U->A->S->PSP (создание платёжных сессий/чарджей)
-- **Decision:** обязательный `Idempotency-Key` в заголовке; дедупликация по `(ключ, hash(body))`; окно хранения ≤ **<24h>**; ответы повторов — byte-to-byte идентичны; аудит `idempotency.hit|miss|expired`.
+- **Decision:** обязательный `Idempotency-Key` в заголовке; дедупликация по `(ключ, hash(body))`; окно хранения ≤ **24h**; ответы повторов — byte-to-byte идентичны; аудит `idempotency.hit|miss|expired`.
 - **Trade-offs:** хранение ключей/ответов; редкие коллизии ключей; сложнее кэш-инвалидация.
 - **DoD:** повтор с тем же ключом -> один чардж; метрика дублей = 0; отчёт по hit/miss; PSP-логи без повторных capture.
 - **Owner:** Backend Lead
@@ -310,7 +310,7 @@ flowchart LR
 | Threat | NFR    | ADR     | Чем проверяем (план/факт)                                                                                                 |
 |------:|--------|---------|-----------------------------------------------------------------------------------------------------------------------------|
 | T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`), Postman коллекция `EVIDENCE/postman-bola-negative.json`; логи отказов `EVIDENCE/access.denied.ndjson` |
-| T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit-*`; графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
+| T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit`; графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
 | T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
 | T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
 | T14   | NFR-5 | ADR-005 | повторы с тем же ключом `EVIDENCE/idempotency-run.txt`, проверка окна `EVIDENCE/idempotency-expire.txt`; выгрузка PSP `EVIDENCE/psp-transactions.csv` без дублей |
