@@ -160,7 +160,6 @@ flowchart LR
 | T18 | **I**  | A→S                            | Избыточная экспозиция (raw объекты, предсказуемые ID) -> раскрытие данных.                                           | 3 | 3 | 9   |
 | T19 | **S**  | A→S        | Спуфинг сервиса (нет allowlist во внутреннем периметре).                                                        | 2 | 4 | 8   |
 | T20 | **I**  | S (интеграции)                | **SSRF**/небезопасное потребление внешних API -> метаданные/ключи.                                                    | 2 | 5 | 10  |
-| T21 | **D**  | U→A (каталог/корзина)         | **Denial of Inventory**: массовое «резервирование» товара в корзинах без покупки.                          | 3 | 4 | 12  |
 
 ---
 
@@ -194,12 +193,12 @@ flowchart LR
    - **Обнаружимость:** Трудно заметить без целевых тестов политик.
    - **Решение:** включить **RLS** по умолчанию (`ENABLE ROW LEVEL SECURITY`), явные политики `FOR SELECT/INSERT/UPDATE/DELETE`, тесты политик.
 
-5. **T21 — Denial of Inventory (корзины/резервы)** — **L*I=12**  
-   - **Экспозиция:** каталог/корзина. 
-   - **Частота:** Часто при бот-скриптах и акциях высокой популярности.  
-   - **Чувствительность:** Блокирует продажу; прямые потери выручки.  
-   - **Обнаружимость:** Снижается конверсия «добавлено → покупка», всплеск резервов. 
-   - **Решение:** лимиты на резервы по аккаунту/IP/фингерпринту, короткие TTL «холдов», поведенческие фильтры, отсечение headless-ботов.
+5. **T14 — Дублируемые платежи без Idempotency-Key** — **L*I=12**  
+   - **Экспозиция:** платёжные POST/создание сессий.  
+   - **Частота:** Нередко при ретраях/нестабильной сети.  
+   - **Чувствительность:** Риск повторных списаний и финансовых потерь.  
+   - **Обнаружимость:** Выявляется по дублям транзакций/корреляции.  
+   - **Решение:** обязательный **Idempotency-Key** + окно хранения ≤ 24h; детерминированные ответы на повторы.
 
 ---
 
@@ -249,14 +248,14 @@ flowchart LR
 
 ---
 
-### NFR-5. Анти-“Denial of Inventory” (корзины/резервы)
-**Покрывает:** T21  
-**Requirement:** "Холды"" в корзине живут <= **<X min>**; лимит **<= <A> единиц**/аккаунт и **<= <B> SKU** одновременно; per-IP/фингерпринт — **<= <C> параллельных hold-операций**; превышение → `409 hold_limit_exceeded` или `429`; автоматический release по TTL.  
+### NFR-5. Idempotency для платежей (PSP)
+**Покрывает:** T14  
+**Requirement:** Для `POST /api/payments/*` обязателен `Idempotency-Key`; окно хранения результатов ≤ **<24h>**; повторы с тем же ключом возвращают идентичный ответ без дублей транзакций; детерминированность по `(ключ, тело)`.  
 **Acceptance (G-W-T):**  
-- **Given** пользователь превысил лимит hold’ов, **When** `POST /api/cart/add`, **Then** `409/429` и событие `inventory.protect.hit`.  
-- **Given** истёк TTL hold’а, **When** таймер срабатывает, **Then** товар возвращается в доступный сток.
-
-**Evidence:** нагрузочный сценарий DoI; алерты на аномальную конверсию «корзина→оплата».
+- **Given** тот же `Idempotency-Key` и тело, **When** повторный `POST /api/payments/session`, **Then** ответ 200/201 с тем же `payment_id`, без нового списания.  
+- **Given** истёкшее окно хранения, **When** тот же запрос, **Then** создаётся новая сессия и лог `idempotency.expired`.
+ 
+**Evidence:** скрипт повторов/ретраев; логи PSP без дублей; отчёт по окну хранения ключей.
 
 ---
 
@@ -295,13 +294,14 @@ flowchart LR
 - **Owner:** DBA
 - **Evidence:** `EVIDENCE/rls-policies.sql`, `EVIDENCE/rls-unit.spec.sql`, `EVIDENCE/psql-explain.txt`
 
-#### ADR-005 — Anti-Denial of Inventory: Hold TTL + Квоты по аккаунту/IP
-- **Context:** T21, NFR-5; U->A->S (корзины/резервы)
-- **Decision:** hold-TTL <= **<X> min**; квоты: <= **<A>** единиц/аккаунт, <= **<B>** SKU одновременно, <= **<C>** параллельных hold-операций/ID устройства; превышение -> **409/429**; периодический release истёкших hold’ов; алерты по аномальной конверсии «корзина->оплата».
-- **Trade-offs:** возможные ложные отказы для добросовестных пользователей; требуется фингерпринт девайса; усложнение UX в пиках.
-- **DoD:** нагрузочный сценарий DoI вызывает `409/429` по квотам; истёкшие hold’ы возвращают сток; метрика `hold.abuse.detected` и дашборд конверсии доступны.
+
+#### ADR-005 — Payment Idempotency Keys (детерминированные повторы)
+- **Context:** T14, NFR-5; U→A→S→PSP (создание платёжных сессий/чарджей)
+- **Decision:** обязательный `Idempotency-Key` в заголовке; дедупликация по `(ключ, hash(body))`; окно хранения ≤ **<24h>**; ответы повторов — byte-to-byte идентичны; аудит `idempotency.hit|miss|expired`.
+- **Trade-offs:** хранение ключей/ответов; редкие коллизии ключей; сложнее кэш-инвалидация.
+- **DoD:** повтор с тем же ключом → один чардж; метрика дублей = 0; отчёт по hit/miss; PSP-логи без повторных capture.
 - **Owner:** Backend Lead
-- **Evidence:** `EVIDENCE/load-doi.jmx`, `EVIDENCE/funnel-cart-to-purchase.png`, `EVIDENCE/inventory.protect.ndjson`
+- **Evidence:** `EVIDENCE/idempotency-run.txt`, `EVIDENCE/idempotency-expire.txt`, `EVIDENCE/psp-transactions.csv`
 
 ---
 
@@ -313,7 +313,8 @@ flowchart LR
 | T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit-*`; **FACT:** графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
 | T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; **FACT:** аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
 | T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; **FACT:** миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
-| T21   | NFR-5  | ADR-005 | DoI-стресс `EVIDENCE/load-doi.jmx` с превышением квот; проверка TTL release; **FACT:** логи `EVIDENCE/inventory.protect.ndjson`, воронка `EVIDENCE/funnel-cart-to-purchase.png` |
+| T14   | NFR-5 | ADR-005 | **PLAN:** повторы с тем же ключом `EVIDENCE/idempotency-run.txt`, проверка окна `EVIDENCE/idempotency-expire.txt`; **FACT:** выгрузка PSP `EVIDENCE/psp-transactions.csv` без дублей |
+
 
 ---
 
