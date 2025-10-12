@@ -91,7 +91,7 @@ flowchart LR
 **Риски:** SQL‑инъекции, утечка PII.  
 **Контроль:**
 - Параметризованные запросы / prepared statements; запрет конкатенаций. *(NFR: Data‑Integrity)*
-- Row‑Level Security для tenant‑изоляции аредотатора; роли БД по наименьшим привилегиям. *(NFR: Security‑AuthZ/RBAC; Privacy/PII)*
+- Row‑Level Security для tenant‑изоляции; роли БД по наименьшим привилегиям. *(NFR: Security‑AuthZ/RBAC; Privacy/PII)*
 - Шифрование в покое/бэкапах; маскирование PII в логах. *(NFR: Privacy/PII; Auditability)*
 
 **4. Seller Service → Платёжный провайдер (S → PSP)**  
@@ -217,7 +217,7 @@ flowchart LR
 
 ### NFR-2. Лимиты, 429 и устойчивые исходящие (timeouts/retry/jitter/CB)
 **Покрывает:** T05  
-**Requirement:** На публичных API: <= **<N> rps** на токен и <= **<M> rps** на IP; при превышении — **429 + Retry-After** и **RateLimit-\*** заголовки. Для исходящих к PSP/TAX/SHP: **timeout <= <2s>**, **retry <= 3** с **экспоненциальным ростом**, **circuit breaker** при error-rate **>=50%** за **1 мин**.  
+**Requirement:** На публичных API: <= **5 rps** на токен и <= **5 rps** на IP; при превышении — **429 + Retry-After** и **RateLimit-\*** заголовки. Для исходящих к PSP/TAX/SHP: **timeout <= <2s>**, **retry <= 3** с **экспоненциальным ростом**, **circuit breaker** при error-rate **>=50%** за **1 мин**.  
 **Acceptance (G-W-T):**  
 - **Given** `10К` запросов за 60s, **When** `POST /api/<endpoint>`, **Then** 429 с `Retry-After` и `RateLimit-*`.  
 - **Given** недоступность `PSP/TAX/SHP`, **When** вызов из сервиса, **Then** суммарное ожидание <= **<6s>**, попыток <= 3, circuit-breaker открыт.
@@ -241,7 +241,7 @@ flowchart LR
 **Покрывает:** T17  
 **Requirement:** На всех таблицах с tenant-данными включён **Row Level Security**; заданы политики `FOR SELECT/INSERT/UPDATE/DELETE`, исключающие доступ к строкам с `tenant_id != <current_tenant>`; роль приложения не имеет `BYPASSRLS`.  
 **Acceptance (G-W-T):**  
-- **Given** сессия с `current_setting('app.tenant_id')=A`, **When** `SELECT` по таблице `<T>`, **Then** возвращаются только строки tenant **A**.  
+- **Given** сессия с `current_setting('app.tenant_id')=A`, **When** `SELECT` по таблице `<TABLE_NAME>`, **Then** возвращаются только строки tenant **A**.  
 - **Given** попытка `UPDATE` строк другого tenant, **When** выполнение через DAO, **Then** 0 обновлённых строк и запись отказа в логах.
 
 **Evidence:** unit-тесты политик; скрипт проверки `ENABLE RLS`/`ALTER POLICY`.
@@ -272,7 +272,7 @@ flowchart LR
 
 #### ADR-002 — Public Edge Rate-Limiting + Timeouts/Retry + Circuit Breaker
 - **Context:** T05, NFR-2; публичные endpoint’ы (U->A), исходящие к PSP/TAX/SHP
-- **Decision:** rate-limit на GW: <= **<N> rps/uid**, <= **<M> rps/ip**, ответы **429 + Retry-After + RateLimit-*;** на исходящих: **timeout <= <2s>**, **retry <= 3** (exponential backoff + jitter), **CB** при error-rate >= **50%/1m**; backpressure/ограничение пула.
+- **Decision:** rate-limit на GW: <= **5 rps/uid**, <= **5 rps/ip**, ответы **429 + Retry-After + RateLimit-*;** на исходящих: **timeout <= <2s>**, **retry <= 3** (exponential backoff + jitter), **CB** при error-rate >= **50%/1m**; backpressure/ограничение пула.
 - **Trade-offs:** возможные **429** влияют на UX; риск ложных блокировок (NAT); ретраи повышают фон трафика.
 - **DoD:** при > **<N> rps** стабильно возвращается **429**; при деградации внешнего API суммарное ожидание <= **<6s>**, CB открывается; **P95 <= <T>s** под целевой нагрузкой.
 - **Owner:** SRE
@@ -309,11 +309,11 @@ flowchart LR
 
 | Threat | NFR    | ADR     | Чем проверяем (план/факт)                                                                                                 |
 |------:|--------|---------|-----------------------------------------------------------------------------------------------------------------------------|
-| T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`), Postman коллекция `EVIDENCE/postman-bola-negative.json`; **FACT:** логи отказов `EVIDENCE/access.denied.ndjson` |
-| T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit-*`; **FACT:** графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
-| T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; **FACT:** аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
-| T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; **FACT:** миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
-| T14   | NFR-5 | ADR-005 | **PLAN:** повторы с тем же ключом `EVIDENCE/idempotency-run.txt`, проверка окна `EVIDENCE/idempotency-expire.txt`; **FACT:** выгрузка PSP `EVIDENCE/psp-transactions.csv` без дублей |
+| T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`), Postman коллекция `EVIDENCE/postman-bola-negative.json`; логи отказов `EVIDENCE/access.denied.ndjson` |
+| T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit-*`; графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
+| T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
+| T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
+| T14   | NFR-5 | ADR-005 | повторы с тем же ключом `EVIDENCE/idempotency-run.txt`, проверка окна `EVIDENCE/idempotency-expire.txt`; выгрузка PSP `EVIDENCE/psp-transactions.csv` без дублей |
 
 
 ---
