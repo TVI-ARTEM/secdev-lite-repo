@@ -269,7 +269,7 @@ flowchart LR
 - **Trade-offs (кратко):** чаще `401` при истекших токенах; +операционная сложность ротации; +незначительная латентность двойной проверки.
 - **DoD (готовность):** истёкший/подделанный токен -> **401**; валидный -> **200** с `X-User-Id`; тест «неожиданный alg» провален; журнал `auth.token_invalid` присутствует.
 - **Owner:** Security Engineer
-- **Evidence:** `EVIDENCE/dast-auth-YYYY-MM-DD.pdf#token-tests`, `EVIDENCE/auth.invalid_token.ndjson`
+- **Evidence:** `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`, `EVIDENCE/auth.invalid_token.ndjson`
 
 #### ADR-002 — Public Edge Rate-Limiting + Timeouts/Retry + Circuit Breaker
 - **Context:** T05, NFR-2; публичные endpoint’ы (U->A), исходящие к PSP/TAX/SHP
@@ -307,32 +307,30 @@ flowchart LR
 
 ## 5) Трассировка Threat → NFR → ADR → (План)Проверки (TM5)
 
-| Threat | NFR   | ADR     | Чем проверяем (план/факт)                                                                 |
-|-------:|-------|---------|-------------------------------------------------------------------------------------------|
-| T01    | NFR-1 | ADR-001 | DAST auth-flow; аудит `auth.token_invalid` → EVIDENCE/dast-auth-YYYY-MM-DD.pdf / audit-sample.txt |
-| T05    | NFR-2 | ADR-002 | Нагрузочный тест + проверка 429/таймаутов → EVIDENCE/load-after.png                       |
-| T04    | NFR-X | ADR-00X | SAST/линтер на инъекции/параметризацию → EVIDENCE/sast-YYYY-MM-DD.pdf#sql-1              |
-| T03    | NFR-3 | ADR-00Y | Анализ образцов аудита → EVIDENCE/audit-sample.txt#corrid                                |
-
-> TODO: заполните таблицу для ваших Top-5; верификация может быть «планом», позже артефакты появятся в DV/DS.
+| Threat | NFR    | ADR     | Чем проверяем (план/факт)                                                                                                 |
+|------:|--------|---------|-----------------------------------------------------------------------------------------------------------------------------|
+| T07   | NFR-3  | ADR-003 | e2e негативы меж-tenant (`EVIDENCE/e2e-tenant-isolation.spec.ts`), Postman коллекция `EVIDENCE/postman-bola-negative.json`; **FACT:** логи отказов `EVIDENCE/access.denied.ndjson` |
+| T05   | NFR-2  | ADR-002 | нагрузочный скрипт k6/JMeter `EVIDENCE/load-rate-limit.jmx`; проверка `429 + Retry-After + RateLimit-*`; **FACT:** графики `EVIDENCE/load-after.png`, `EVIDENCE/latency-p95.json`, `EVIDENCE/circuit-breaker-state.png` |
+| T01   | NFR-1  | ADR-001 | DAST auth-flow `EVIDENCE/dast-auth-YYYY-MM-DD.pdf`; тест «unexpected alg»; **FACT:** аудит `EVIDENCE/auth.token_invalid.ndjson`, снимок JWKS/rotation `EVIDENCE/jwks-rotation.png` |
+| T17   | NFR-4  | ADR-004 | SQL unit-тесты политик `EVIDENCE/rls-unit.spec.sql`; psql-пруф `EVIDENCE/psql-rls-demo.txt`; **FACT:** миграции `EVIDENCE/rls-policies.sql`, explain-вывод `EVIDENCE/psql-explain.txt` |
+| T21   | NFR-5  | ADR-005 | DoI-стресс `EVIDENCE/load-doi.jmx` с превышением квот; проверка TTL release; **FACT:** логи `EVIDENCE/inventory.protect.ndjson`, воронка `EVIDENCE/funnel-cart-to-purchase.png` |
 
 ---
 
 ## 6) План проверок (мост в DV/DS)
 
-- **SAST/Secrets/SCA:** TODO: инструменты и куда положите отчёты в `EVIDENCE/`
-- **SBOM:** TODO: генератор/формат
-- **DAST (если применимо):** TODO: стенд/URL; профиль
-- **Примечание:** на этапе TM допустимы черновые планы/ссылки; финальные отчёты появятся в **DV/DS**.
+- **SAST/Secrets/SCA:** EVIDENCE/sast.json, EVIDENCE/secrets.json, EVIDENCE/sca-npm.json
+- **SBOM:** EVIDENCE/sbom.json
+- **DAST (если применимо):** EVIDENCE/dast.html
 
 ---
 
 ## 7) Самопроверка по рубрике TM (0/1/2)
 
-- **TM1. Архитектура и границы доверия:** [ ] 0 [ ] 1 [ ] 2  
-- **TM2. Покрытие STRIDE и уместность угроз:** [ ] 0 [ ] 1 [ ] 2  
-- **TM3. Приоритизация и Top-5:** [ ] 0 [ ] 1 [ ] 2  
-- **TM4. NFR + ADR под Top-5:** [ ] 0 [ ] 1 [ ] 2  
-- **TM5. Трассировка → (план)проверок:** [ ] 0 [ ] 1 [ ] 2  
+- **TM1. Архитектура и границы доверия:** [+] 2  
+- **TM2. Покрытие STRIDE и уместность угроз:** [+] 2
+- **TM3. Приоритизация и Top-5:** [+] 2 
+- **TM4. NFR + ADR под Top-5:** [+] 2  
+- **TM5. Трассировка → (план)проверок:** [+] 2  
 
-**Итог TM (сумма):** __/10
+**Итог TM (сумма):** 10/10
