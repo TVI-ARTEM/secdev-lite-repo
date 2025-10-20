@@ -1,0 +1,282 @@
+[
+    {
+        "Id": "57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0",
+        "Created": "2025-10-20T15:17:45.402799395Z",
+        "Path": "/bin/sh",
+        "Args": [
+            "-c",
+            "python scripts/init_db.py \u0026\u0026 uvicorn app.main:app --host 0.0.0.0 --port 8000"
+        ],
+        "State": {
+            "Status": "running",
+            "Running": true,
+            "Paused": false,
+            "Restarting": false,
+            "OOMKilled": false,
+            "Dead": false,
+            "Pid": 3921,
+            "ExitCode": 0,
+            "Error": "",
+            "StartedAt": "2025-10-20T15:17:45.845130059Z",
+            "FinishedAt": "0001-01-01T00:00:00Z",
+            "Health": {
+                "Status": "healthy",
+                "FailingStreak": 0,
+                "Log": [
+                    {
+                        "Start": "2025-10-20T15:17:55.84619147Z",
+                        "End": "2025-10-20T15:17:56.334072513Z",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2025-10-20T15:18:06.343131289Z",
+                        "End": "2025-10-20T15:18:06.68272273Z",
+                        "ExitCode": 0,
+                        "Output": ""
+                    },
+                    {
+                        "Start": "2025-10-20T15:18:16.693654364Z",
+                        "End": "2025-10-20T15:18:17.020217206Z",
+                        "ExitCode": 0,
+                        "Output": ""
+                    }
+                ]
+            }
+        },
+        "Image": "sha256:ca2d110094ad15834c1130ce5d635d38d08200909362b3c85413f508a5ec2b10",
+        "ResolvConfPath": "/var/lib/docker/containers/57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0/resolv.conf",
+        "HostnamePath": "/var/lib/docker/containers/57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0/hostname",
+        "HostsPath": "/var/lib/docker/containers/57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0/hosts",
+        "LogPath": "/var/lib/docker/containers/57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0/57ee0e2fb2c3827924827861a4e1731f9ab9e76068f8756a868e7d4f207e01d0-json.log",
+        "Name": "/secdev-seed-web",
+        "RestartCount": 0,
+        "Driver": "overlay2",
+        "Platform": "linux",
+        "MountLabel": "",
+        "ProcessLabel": "",
+        "AppArmorProfile": "",
+        "ExecIDs": [
+            "658633832d2882cd07a76e419919584a081abeb46936b57af7af7ffa78a2702d"
+        ],
+        "HostConfig": {
+            "Binds": null,
+            "ContainerIDFile": "",
+            "LogConfig": {
+                "Type": "json-file",
+                "Config": {}
+            },
+            "NetworkMode": "secdev-06-08_default",
+            "PortBindings": {
+                "8000/tcp": [
+                    {
+                        "HostIp": "",
+                        "HostPort": "8000"
+                    }
+                ]
+            },
+            "RestartPolicy": {
+                "Name": "unless-stopped",
+                "MaximumRetryCount": 0
+            },
+            "AutoRemove": false,
+            "VolumeDriver": "",
+            "VolumesFrom": null,
+            "ConsoleSize": [
+                0,
+                0
+            ],
+            "CapAdd": null,
+            "CapDrop": [
+                "ALL"
+            ],
+            "CgroupnsMode": "private",
+            "Dns": null,
+            "DnsOptions": null,
+            "DnsSearch": null,
+            "ExtraHosts": [],
+            "GroupAdd": null,
+            "IpcMode": "private",
+            "Cgroup": "",
+            "Links": null,
+            "OomScoreAdj": 0,
+            "PidMode": "",
+            "Privileged": false,
+            "PublishAllPorts": false,
+            "ReadonlyRootfs": false,
+            "SecurityOpt": [
+                "no-new-privileges:true"
+            ],
+            "UTSMode": "",
+            "UsernsMode": "",
+            "ShmSize": 67108864,
+            "Runtime": "runc",
+            "Isolation": "",
+            "CpuShares": 0,
+            "Memory": 0,
+            "NanoCpus": 0,
+            "CgroupParent": "",
+            "BlkioWeight": 0,
+            "BlkioWeightDevice": null,
+            "BlkioDeviceReadBps": null,
+            "BlkioDeviceWriteBps": null,
+            "BlkioDeviceReadIOps": null,
+            "BlkioDeviceWriteIOps": null,
+            "CpuPeriod": 0,
+            "CpuQuota": 0,
+            "CpuRealtimePeriod": 0,
+            "CpuRealtimeRuntime": 0,
+            "CpusetCpus": "",
+            "CpusetMems": "",
+            "Devices": null,
+            "DeviceCgroupRules": null,
+            "DeviceRequests": null,
+            "MemoryReservation": 0,
+            "MemorySwap": 0,
+            "MemorySwappiness": null,
+            "OomKillDisable": null,
+            "PidsLimit": null,
+            "Ulimits": null,
+            "CpuCount": 0,
+            "CpuPercent": 0,
+            "IOMaximumIOps": 0,
+            "IOMaximumBandwidth": 0,
+            "MaskedPaths": [
+                "/proc/asound",
+                "/proc/acpi",
+                "/proc/kcore",
+                "/proc/keys",
+                "/proc/latency_stats",
+                "/proc/timer_list",
+                "/proc/timer_stats",
+                "/proc/sched_debug",
+                "/proc/scsi",
+                "/sys/firmware",
+                "/sys/devices/virtual/powercap"
+            ],
+            "ReadonlyPaths": [
+                "/proc/bus",
+                "/proc/fs",
+                "/proc/irq",
+                "/proc/sys",
+                "/proc/sysrq-trigger"
+            ]
+        },
+        "GraphDriver": {
+            "Data": {
+                "LowerDir": "/var/lib/docker/overlay2/13299a699c20c11e40581fb1d2a17303b74504b79aaea709d976c4f4b29eaa85-init/diff:/var/lib/docker/overlay2/59s1q9mecld1m0dq06i3kvf3p/diff:/var/lib/docker/overlay2/mged68h2eu4l28fjil43wyfct/diff:/var/lib/docker/overlay2/nowqw86ar8bgljejhp5piwsvv/diff:/var/lib/docker/overlay2/b21s0akwa7emtg9u6dxxyqiv8/diff:/var/lib/docker/overlay2/5q0o0ba7mf14d3f01hu58fwcf/diff:/var/lib/docker/overlay2/aqqfpn1ehwkvn9w902kfw1y2l/diff:/var/lib/docker/overlay2/1894bf2a592b6ac1587abb67c888b40becb3f4751a35c2dc695d342db91be274/diff:/var/lib/docker/overlay2/d188e70bb4a53832c4198ecf44b08b688b239f71b59f7d79ca3d8c2465dc27f6/diff:/var/lib/docker/overlay2/99162c28098ad741f7e1c7fbb7366414628b22a781f3b651dbd8662283f8057b/diff:/var/lib/docker/overlay2/492709a4a03eb60ea3d0ecd42cc721a133464f8046a8c17d6d69d54eb719c665/diff",
+                "MergedDir": "/var/lib/docker/overlay2/13299a699c20c11e40581fb1d2a17303b74504b79aaea709d976c4f4b29eaa85/merged",
+                "UpperDir": "/var/lib/docker/overlay2/13299a699c20c11e40581fb1d2a17303b74504b79aaea709d976c4f4b29eaa85/diff",
+                "WorkDir": "/var/lib/docker/overlay2/13299a699c20c11e40581fb1d2a17303b74504b79aaea709d976c4f4b29eaa85/work"
+            },
+            "Name": "overlay2"
+        },
+        "Mounts": [],
+        "Config": {
+            "Hostname": "57ee0e2fb2c3",
+            "Domainname": "",
+            "User": "appuser",
+            "AttachStdin": false,
+            "AttachStdout": true,
+            "AttachStderr": true,
+            "ExposedPorts": {
+                "8000/tcp": {}
+            },
+            "Tty": false,
+            "OpenStdin": false,
+            "StdinOnce": false,
+            "Env": [
+                "APP_NAME=secdev-seed",
+                "DEBUG=true",
+                "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+                "LANG=C.UTF-8",
+                "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+                "PYTHON_VERSION=3.11.14",
+                "PYTHON_SHA256=8d3ed8ec5c88c1c95f5e558612a725450d2452813ddad5e58fdb1a53b1209b78",
+                "PYTHONDONTWRITEBYTECODE=1",
+                "PYTHONUNBUFFERED=1",
+                "PIP_DISABLE_PIP_VERSION_CHECK=1"
+            ],
+            "Cmd": [
+                "/bin/sh",
+                "-c",
+                "python scripts/init_db.py \u0026\u0026 uvicorn app.main:app --host 0.0.0.0 --port 8000"
+            ],
+            "Healthcheck": {
+                "Test": [
+                    "CMD-SHELL",
+                    "python -c \"import urllib.request as u; u.urlopen('http://127.0.0.1:8000/').read()\""
+                ],
+                "Interval": 10000000000,
+                "Timeout": 3000000000,
+                "StartPeriod": 5000000000,
+                "Retries": 5
+            },
+            "Image": "secdev-06-08-web",
+            "Volumes": null,
+            "WorkingDir": "/app",
+            "Entrypoint": null,
+            "OnBuild": null,
+            "Labels": {
+                "com.docker.compose.config-hash": "18ac16da496f4e5e107b22720b8429d11a98875a5f0ab0412a1e9b0d2c128378",
+                "com.docker.compose.container-number": "1",
+                "com.docker.compose.depends_on": "",
+                "com.docker.compose.image": "sha256:ca2d110094ad15834c1130ce5d635d38d08200909362b3c85413f508a5ec2b10",
+                "com.docker.compose.oneoff": "False",
+                "com.docker.compose.project": "secdev-06-08",
+                "com.docker.compose.project.config_files": "/mnt/d/HSE/Programming - Python/Sec/secdev-06-08/docker-compose.yml",
+                "com.docker.compose.project.working_dir": "/mnt/d/HSE/Programming - Python/Sec/secdev-06-08",
+                "com.docker.compose.service": "web",
+                "com.docker.compose.version": "2.23.3",
+                "desktop.docker.io/wsl-distro": "Ubuntu-20.04"
+            }
+        },
+        "NetworkSettings": {
+            "Bridge": "",
+            "SandboxID": "1722cb1e6ea5ed227d71c510020b0e6be3adefe01fdb693900bd5b27ed4f6336",
+            "HairpinMode": false,
+            "LinkLocalIPv6Address": "",
+            "LinkLocalIPv6PrefixLen": 0,
+            "Ports": {
+                "8000/tcp": [
+                    {
+                        "HostIp": "0.0.0.0",
+                        "HostPort": "8000"
+                    }
+                ]
+            },
+            "SandboxKey": "/var/run/docker/netns/1722cb1e6ea5",
+            "SecondaryIPAddresses": null,
+            "SecondaryIPv6Addresses": null,
+            "EndpointID": "",
+            "Gateway": "",
+            "GlobalIPv6Address": "",
+            "GlobalIPv6PrefixLen": 0,
+            "IPAddress": "",
+            "IPPrefixLen": 0,
+            "IPv6Gateway": "",
+            "MacAddress": "",
+            "Networks": {
+                "secdev-06-08_default": {
+                    "IPAMConfig": null,
+                    "Links": null,
+                    "Aliases": [
+                        "secdev-seed-web",
+                        "web",
+                        "57ee0e2fb2c3"
+                    ],
+                    "MacAddress": "02:42:ac:13:00:02",
+                    "NetworkID": "20ab394b709a7596e279164c99fd863dc1a6631a4faa362cf09555001880c7f2",
+                    "EndpointID": "6c0d7b9bb62561badbf203c969536509ac55f06920fbd2c03c8ab10275c65090",
+                    "Gateway": "172.19.0.1",
+                    "IPAddress": "172.19.0.2",
+                    "IPPrefixLen": 16,
+                    "IPv6Gateway": "",
+                    "GlobalIPv6Address": "",
+                    "GlobalIPv6PrefixLen": 0,
+                    "DriverOpts": null
+                }
+            }
+        }
+    }
+]
