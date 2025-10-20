@@ -1,6 +1,6 @@
 services:
   web:
-    image: tvi02/secdev-app:95d01dc6b25c5eda272c542ce9f06c889f2a9f9f
+    image: tvi02/secdev-app:latest
     container_name: secdev-seed-web
     ports:
       - "8000:8000"
