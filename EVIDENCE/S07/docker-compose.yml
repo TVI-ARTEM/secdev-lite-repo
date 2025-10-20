@@ -1,8 +1,6 @@
 services:
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: tvi02/secdev-app:95d01dc6b25c5eda272c542ce9f06c889f2a9f9f
     container_name: secdev-seed-web
     ports:
       - "8000:8000"
