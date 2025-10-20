@@ -226,15 +226,27 @@ EVIDENCE:
 
 ## 6) Индекс артефактов DV
 
-_Чтобы преподаватель быстро сверил файлы._
-
-| Тип     | Файл в `EVIDENCE/`            | Дата/время         | Коммит/версия | Runner/OS    |
+| Тип     | Файл в `EVIDENCE/`            | Дата         | Коммит/версия | OS    |
 |---------|--------------------------------|--------------------|---------------|--------------|
-| CI-лог  | `ci-YYYY-MM-DD-build.txt`      | `YYYY-MM-DD hh:mm` | `abc123`      | `gha-ubuntu` |
-| Лок.лог | `local-build-YYYY-MM-DD.txt`   | …                  | `abc123`      | `local`      |
-| Package | `package-notes.txt`            | …                  | `abc123`      | -            |
-| Freeze  | `pip-freeze.txt` (или аналог)  | …                  | `abc123`      | -            |
-| Grep    | `grep-secrets.txt`             | …                  | `abc123`      | -            |
+| Makefile  | [S06/Makefile](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/Makefile)      | `2025-10-20`                  | `v1`      | - |
+| Тест лог | [S06/logs/pytest.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/logs/pytest.log)   | `2025-10-20`                  | `v1`      | `wsl` |
+| Requirements | [S06/requirements.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/requirements.txt)           | `2025-10-20`                  | `v1`      | - |
+| SECURITY  | [S06/SECURITY.md](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/SECURITY.md)  | `2025-10-20`                  | `v1`      | - |
+| pre-commit-config    | [S06/pre-commit-config.yaml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/pre-commit-config.yaml)             | `2025-10-20`                  | `v1`      | - |
+| pre-commit run    | [S06/pre-commit-after-updates.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/pre-commit-after-updates.txt)             | `2025-10-20`                  | `v1`      | `wsl` |
+| test-report    | [S06/test-report.xml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/test-report.xml)             | `2025-10-20`                  | `v1`      | `wsl` |
+| Dockerfile   | [S07/Dockerfile](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/Dockerfile)             | `2025-10-20`                  | `v1`      | - |
+| docker-compose   | [S07/docker-compose.yml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/docker-compose.yml)             | `2025-10-20`                  | `v1`      | - |
+| build   | [S07/build.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/build.log)             | `2025-10-20`                  | `v1`      | `wsl` |
+| health   | [S07/health.json](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/health.json)             | `2025-10-20`                  | `v1`      | `wsl` |
+| http_root_code   | [S07/http_root_code.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/http_root_code.txt)             | `2025-10-20`                  | `v1`      | `wsl` |
+| image-size   | [S07/image-size.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/image-size.txt)             | `2025-10-20`                  | `v1`      | `wsl` |
+| inspect_web   | [S07/inspect_web.json](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/inspect_web.json)             | `2025-10-20`                  | `v1`      | `wsl` |
+| non-root   | [S07/non-root.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/non-root.txt)             | `2025-10-20`                  | `v1`      | `wsl` |
+| run   | [S07/run.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/run.log)             | `2025-10-20`                  | `v1`      | `wsl` |
+| ci/cd-run   | [S08/ci-run.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt)             | `2025-10-20`                  | `v1`      | `ubuntu` |
+| cd docker image  | [S08/cd-docker.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd-docker.txt)             | `2025-10-20`                  | `v1`      | `ubuntu` |
+| grep  | [S08/grep-secrets.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/grep-secrets.txt)             | `2025-10-20`                  | `v1`      | `windows` |
 
 ---
 
