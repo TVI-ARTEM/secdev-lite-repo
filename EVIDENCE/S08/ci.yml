@@ -1,0 +1,68 @@
+
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          pip install pre-commit
+
+      - name: Prepare masked secrets
+        shell: bash
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          source="placeholder"
+          if [ -n "${SECRET_KEY}" ]; then
+            source="github-secret"
+          else
+            SECRET_KEY="ci-placeholder-secret"
+          fi
+          echo "::add-mask::$SECRET_KEY"
+          echo "SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+          echo "SECRET_KEY_SOURCE=$source" >> "$GITHUB_ENV"
+          echo "SECRET_KEY_LENGTH=${#SECRET_KEY}" >> "$GITHUB_ENV"
+
+      - name: Pre-commit checks
+        run: pre-commit run --all-files
+
+      - name: Init DB
+        run: python scripts/init_db.py
+
+      - name: Run tests
+        run: |
+          mkdir -p EVIDENCE/S08
+          pytest -q --junitxml=EVIDENCE/S08/test-report.xml
+        continue-on-error: false
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-s08
+          path: |
+            EVIDENCE/S08/**
+          if-no-files-found: warn
