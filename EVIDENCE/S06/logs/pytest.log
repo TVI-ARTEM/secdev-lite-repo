@@ -1,0 +1,25 @@
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 422 Unprocessable Entity"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 429 Too Many Requests"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/search?q=zzzzzzzzz "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/search?q=%27%20OR%20%271%27%3D%271 "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa "HTTP/1.1 422 Unprocessable Entity"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/ "HTTP/1.1 200 OK"
+ERROR    secdev:main.py:61 Unhandled error on GET /__test__/boom: RuntimeError
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/__test__/boom "HTTP/1.1 500 Internal Server Error"
+INFO     secdev:main.py:107 Failed login attempt for username=adm***
+INFO     httpx:_client.py:1038 HTTP Request: POST http://testserver/login "HTTP/1.1 401 Unauthorized"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/echo?msg=%3Cscript%3Ealert%281%29%3C%2Fscript%3E "HTTP/1.1 200 OK"
+INFO     httpx:_client.py:1038 HTTP Request: GET http://testserver/echo?msg=%3Cimg%20src%3Dx%20onerror%3Dalert%281%29%3E "HTTP/1.1 200 OK"

@@ -1,0 +1,6 @@
+make ci-s06
+mkdir -p EVIDENCE/S06/logs
+pytest --junitxml=EVIDENCE/S06/test-report.xml --log-file=EVIDENCE/S06/logs/pytest.log --log-file-level=INFO -q
+.............                                                                                     [100%]
+--- generated xml file: /mnt/.../EVIDENCE/S06/test-report.xml ---
+13 passed in 7.84s

@@ -1,0 +1,78 @@
+> pre-commit run --all-files
+[INFO] Installing environment for https://github.com/pre-commit/pre-commit-hooks.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/psf/black.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/pycqa/isort.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/astral-sh/ruff-pre-commit.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+[INFO] Installing environment for https://github.com/asottile/pyupgrade.
+[INFO] Once installed this environment will be reused.
+[INFO] This may take a few minutes...
+fix end of files.........................................................Failed
+- hook id: end-of-file-fixer
+- exit code: 1
+- files were modified by this hook
+
+Fixing .gitignore
+
+trim trailing whitespace.................................................Passed
+check for merge conflicts................................................Passed
+check json...........................................(no files to check)Skipped
+check yaml...............................................................Passed
+mixed line ending........................................................Failed
+- hook id: mixed-line-ending
+- exit code: 1
+
+Dockerfile: fixed mixed line endings
+app/db.py: fixed mixed line endings
+docker-compose.yml: fixed mixed line endings
+LICENSE: fixed mixed line endings
+scripts/init_db.py: fixed mixed line endings
+app/templates/index.html: fixed mixed line endings
+.dockerignore: fixed mixed line endings
+.gitignore: fixed mixed line endings
+app/models.py: fixed mixed line endings
+app/templates/base.html: fixed mixed line endings
+.env.example: fixed mixed line endings
+tests/test_login_sql_injection.py: fixed mixed line endings
+scripts/run.sh: fixed mixed line endings
+.github/workflows/ci.yml: fixed mixed line endings
+README.md: fixed mixed line endings
+tests/test_search_sql_like.py: fixed mixed line endings
+tests/test_xss_escaping.py: fixed mixed line endings
+app/main.py: fixed mixed line endings
+Makefile: fixed mixed line endings
+requirements.txt: fixed mixed line endings
+scripts/test.sh: fixed mixed line endings
+black....................................................................Failed
+- hook id: black
+- files were modified by this hook
+
+reformatted app\models.py
+reformatted tests\test_login_sql_injection.py
+reformatted scripts\init_db.py
+reformatted tests\test_search_sql_like.py
+reformatted app\db.py
+reformatted tests\test_xss_escaping.py
+reformatted app\main.py
+
+All done! \u2728 \U0001f370 \u2728
+7 files reformatted, 2 files left unchanged.
+
+isort....................................................................Failed
+- hook id: isort
+- files were modified by this hook
+
+Fixing ...\app\main.py
+Fixing ...\tests\test_login_sql_injection.py
+Fixing ...\tests\test_search_sql_like.py
+Fixing ...\tests\test_xss_escaping.py
+
+ruff check...............................................................Passed
+pyupgrade................................................................Passed
