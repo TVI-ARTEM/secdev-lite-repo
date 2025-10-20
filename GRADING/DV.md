@@ -1,66 +1,90 @@
 # DV - Мини-проект «DevOps-конвейер»
 
-> Этот файл - **индивидуальный**. Его проверяют по **rubric_DV.md** (5 критериев × {0/1/2} → 0-10).
-> Подсказки помечены `TODO:` - удалите после заполнения.
-> Все доказательства/скрины кладите в **EVIDENCE/** и ссылайтесь на конкретные файлы/якоря.
-
----
-
 ## 0) Мета
 
 - **Проект (опционально BYO):** [«учебный шаблон» (secdev-seed-s06-s08)](https://github.com/TVI-ARTEM/secdev-06-08)
-- **Версия (commit/date):** 2025-10-19
-- **Кратко (1-2 предложения):** TODO: что именно собираем/тестируем/пакуем
-
+- **Версия (commit/date):** `v1` / `2025-10-20`
+- **Кратко (1-2 предложения):** тестируем: SQLi, XSS, rate-limit, заголовки безопасности и работу env-конфига, публикуем: образ приложения
+- **Группа:** Беловицкий Владислав, Жулин Артем, Кочнев Виктор, Сергеев Илья, Сидоренков Олег
+  
 ---
 
 ## 1) Воспроизводимость локальной сборки и тестов (DV1)
 
-- **Одна команда для сборки/тестов:**
+- **Команда для запуска образа:**
 
   ```bash
-  # TODO: замените на ваш one-liner
-  make build test
+  make compose
   ```
 
-  _Если без Makefile: укажите последовательность команд._
-
-- **Версии инструментов (фиксация):**
+- **Команда для уничтожения образа:**
 
   ```bash
-  # TODO: примеры - удалите лишнее
+  make decompose
+  ```
+
+- **Команда для запуска тестов:**
+
+  ```bash
+  `make venv` + `make deps` + `make init` - создать окружение
+  `make run` - запустить приложение
+  `make ci-s06` - запустить тесты, результат создастся в `EVIDENCE/S06`, файл `test-report.xml`
+  ```
+
+- **Версии инструментов:**
+
+  ```bash
   python --version
-  pip freeze > EVIDENCE/pip-freeze.txt
-  node --version
-  npm ci --version
+  pip freeze > EVIDENCE/S06/requirements.txt
   ```
 
-- **Описание шагов (кратко):** TODO: 2-4 пункта как запустить локально
+- **Локальный запуск:**
+  - Для локального запуска достаточно вызвать команду `make compose`, которая запустит docker-образ версии указанной в [docker-compose.yml](https://github.com/TVI-ARTEM/secdev-06-08/blob/main/docker-compose.yml) - в текущей версии latest версию
+
+EVIDENCE: 
+  - [requirements](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/requirements.txt)
+  - [docker-compose.yml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/docker-compose.yml)
+  - [Makefile](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/Makefile)
 
 ---
 
 ## 2) Контейнеризация (DV2)
 
-- **Dockerfile:** TODO: `path/to/Dockerfile` (база, multi-stage? минимальный образ?)
-- **Сборка/запуск локально:**
-
+- **Dockerfile:** `./Dockerfile` - базовый образ python:3.11-slim, добавлены healthcheck и non-root.
+- **Сборка b запуск локально:**
+  
   ```bash
-  docker build -t app:local .
-  docker run --rm -p 8080:8080 app:local
+  docker build -t secdev-seed-web:latest .
+  docker run --rm -p 8080:8080 secdev-seed-web:local
   ```
 
-  _Укажите порт/команду/healthcheck, если есть._
+  - Healthcheck: 200
+  - No-Root: 1001
 
-- **(Опционально) docker-compose:** `TODO: path/to/docker-compose.yml` - кратко, какие сервисы.
+- **docker-compose:** запускает образ `tvi02/secdev-app` версии `latest` (в текущей версии docker-compose), собранной при выполнение ci/cd.
+
+EVIDENCE:
+  - [CI/CD Запуски](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt)
+  - [docker-compose.yml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/docker-compose.yml)
+  - [Dockefile](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/Dockerfile)
+  - [build.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/build.log)
+  - [compose-up.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/compose-up.log)
+  - [health.json](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/health.json)
+  - [http_root_code.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/edit/main/GRADING/DV.md)
+  - [image-size.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/image-size.txt)
+  - [inspect_web.json](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/inspect_web.json)
+  - [non-root.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/edit/main/GRADING/DV.md)
+  - [run.log](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S07/run.log)
+  - [CD](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd.yml)
 
 ---
 
 ## 3) CI: базовый pipeline и стабильный прогон (DV3)
 
-- **Платформа CI:** TODO: GitHub Actions / GitLab CI / другое
-- **Файл конфига CI:** TODO: путь (напр., `.github/workflows/ci.yml`)
-- **Стадии (минимум):** checkout → deps → **build** → **test** → (package)
-- **Фрагмент конфигурации (ключевые шаги):**
+- **Платформа CI:** GitHub Actions
+- **Файл конфига CI:** `.github/workflows/ci.yml`
+- **Стадии (минимум):** **checkout** → **deps** → **setup** → **cache** → **deps** → **secrets read** → **pre-commit** → **init db** → **test** → **artifacts**
+- **Фрагмент конфигурации:**
 
   ```yaml
   # TODO: укоротите под себя
@@ -68,67 +92,135 @@
   build_test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - name: Cache deps
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ hashFiles('**/requirements*.txt') }}
-      - run: pip install -r requirements.txt
-      - run: pytest -q
-
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+      - name: Install deps
+        run: |
+          pip install -r requirements.txt
+          pip install pre-commit
+      - name: Prepare masked secrets
+        shell: bash
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          ...
+      - name: Pre-commit checks
+        run: pre-commit run --all-files
+      - name: Init DB
+        run: python scripts/init_db.py
+      - name: Run tests
+        run: |
+          mkdir -p EVIDENCE/S08
+          pytest -q --junitxml=EVIDENCE/S08/test-report.xml
+        continue-on-error: false
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: evidence-s08
+          path: |
+            EVIDENCE/S08/**
+          if-no-files-found: warn
   ```
 
-- **Стабильность:** TODO: последние N запусков зелёные? краткий комментарий
-- **Ссылка/копия лога прогона:** `EVIDENCE/ci-YYYY-MM-DD-build.txt`
+- **Стабильность:** последние 14 запусков зеленые ([link](https://github.com/TVI-ARTEM/secdev-06-08/actions))
+- **CD:** кроме CI был добавлен CD Для сборки свежего образа, создаются два тега - один с новым id, другой обновляет `latest` тег, что позволяет запускать `docker-compose` на свежем релизе.
+- **Ссылка/копия лога прогона:** `EVIDENCE/S08/ci-run.txt` ([link](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt))
+
+EVIDENCE:
+  - [CI/CD Запуски](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt)
+  - [CI](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci.yml)
+  - [CD](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd.yml)
+
 
 ---
 
 ## 4) Артефакты и логи конвейера (DV4)
 
-_Сложите файлы в `/EVIDENCE/` и подпишите их назначение._
 
 | Артефакт/лог                    | Путь в `EVIDENCE/`            | Комментарий                                  |
 |---------------------------------|-------------------------------|----------------------------------------------|
-| Лог успешной сборки/тестов (CI) | `ci-YYYY-MM-DD-build.txt`     | ключевые шаги/время                          |
-| Локальный лог сборки (опц.)     | `local-build-YYYY-MM-DD.txt`  | для сверки                                   |
-| Описание результата сборки      | `package-notes.txt`           | какой образ/wheel/архив получился            |
-| Freeze/версии инструментов      | `pip-freeze.txt` (или аналог) | воспроизводимость окружения                  |
+| Лог успешной сборки/тестов и сборки образа (CI/CD) | [S08/ci-run.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt)     | Ссылки на успешные выполнения CI/CD запусков                       |
+| Локальный лог сборки     | [S06/ci-so6-test.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/ci-so6-test.txt)  | Локальный запуск тестов и сборки перед загрузкой в CI                                  |
+| Результаты запуска тестов      | [S08/test-report.xml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/test-report.xml)          |  Отчет в формате XML с результатами всех unit-тестов. Можно открыть любым текстовым редактором.        |
+| Версии инструментов      | [S06/requirements.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/requirements.txt) | Список используемых Python-пакетов с точными версиями для воспроизводимости сборки.                  |
+| Описание CI | [S08/ci.yml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci.yml)  | Конфигурация GitHub Actions |
+| Описание CD | [S08/cd.yml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd.yml) | Конфигурация деплоя Docker-образа в контейнерный реестр. Содержит шаги сборки и публикации с версией, привязанной к коммиту. |
+| Docker-образ после CD| [S08/cd-docker.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd-docker.txt) | Ссылка на docker-образ в hub.docker |
+
 
 ---
 
 ## 5) Секреты и переменные окружения (DV5 - гигиена, без сканеров)
 
-- **Шаблон окружения:** добавлен файл `/.env.example` со списком переменных (без значений), например:
-  - `REG_USER=`
-  - `REG_PASS=`
-  - `API_TOKEN=`
-- **Хранение и передача в CI:**  
-  - секреты лежат в настройках репозитория/организации (**masked**),  
+- **Шаблон окружения:** [env.example](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/env.example)
+- **Хранение и передача в CI:**
+  - проверка наличии секректов проверяется в [pre-commit](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/pre-commit-config.yaml#L10)
+  - секреты лежат в настройках репозитория.
   - в pipeline они **не печатаются** в явном виде.
-- **Пример использования секрета в job (адаптируйте):**
+- **Пример использования секрета в job CI:**
 
   ```yaml
-  - name: Login to registry (masked)
-    env:
-      REG_USER: ${{ secrets.REG_USER }}
-      REG_PASS: ${{ secrets.REG_PASS }}
-    run: |
-      echo "::add-mask::$REG_PASS"
-      echo "$REG_PASS" | docker login -u "$REG_USER" --password-stdin registry.example.com
+      - name: Prepare masked secrets
+        shell: bash
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          source="placeholder"
+          if [ -n "${SECRET_KEY}" ]; then
+            source="github-secret"
+          else
+            SECRET_KEY="ci-placeholder-secret"
+          fi
+          echo "::add-mask::$SECRET_KEY"
+          echo "SECRET_KEY=$SECRET_KEY" >> "$GITHUB_ENV"
+          echo "SECRET_KEY_SOURCE=$source" >> "$GITHUB_ENV"
+          echo "SECRET_KEY_LENGTH=${#SECRET_KEY}" >> "$GITHUB_ENV"
   ```
 
-- **Быстрая проверка отсутствия секретов в коде (любой простой способ):**
+- **Пример использования секрета в job CD:**
+
+  ```yaml
+      - name: Build and Push SecDev App
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/secdev-app:${{ github.sha }}
+            ${{ secrets.DOCKER_USERNAME }}/secdev-app:latest
+          labels: ${{ steps.meta.outputs.labels }}
+  ```
+
+- **Быстрая проверка отсутствия секретов в коде:**
 
   ```bash
-  # пример: поиск популярных паттернов
-  git grep -nE 'AKIA|SECRET|token=|password=' || true
+  git grep -nE 'AKIA|SECRET|token=|password='
   ```
 
-  _Сохраните вывод в `EVIDENCE/grep-secrets.txt`._
-- **Памятка по ротации:** TODO: кто/как меняет secrets при утечке/ревоке токена.
+  Результат: [grep-secrets.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/grep-secrets.txt)
+- **Памятка по ротации:** [SECURITY.md](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/SECURITY.md)
+
+EVIDENCE:
+  - [grep-secrets.txt](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/grep-secrets.txt)
+  - [Использование секретов в CI](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci.yml#L37-L47)
+  - [Использование секретов в CD](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/cd.yml#L37-L39)
+  - [Запуск CI/CD](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/ci-run.txt)
+  - [Памятка по ротоации](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/SECURITY.md)
+  - [Наличие Secret'ов](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S08/repo-secrets.png)
+  - [pre-commit-config.yaml](https://github.com/TVI-ARTEM/secdev-lite-repo/blob/main/EVIDENCE/S06/pre-commit-config.yaml)
 
 ---
 
@@ -155,10 +247,10 @@ _Чтобы преподаватель быстро сверил файлы._
 
 ## 8) Самооценка по рубрике DV (0/1/2)
 
-- **DV1. Воспроизводимость локальной сборки и тестов:** [ ] 0 [ ] 1 [ ] 2  
-- **DV2. Контейнеризация (Docker/Compose):** [ ] 0 [ ] 1 [ ] 2  
-- **DV3. CI: базовый pipeline и стабильный прогон:** [ ] 0 [ ] 1 [ ] 2  
-- **DV4. Артефакты и логи конвейера:** [ ] 0 [ ] 1 [ ] 2  
-- **DV5. Секреты и конфигурация окружения (гигиена):** [ ] 0 [ ] 1 [ ] 2  
+- **DV1. Воспроизводимость локальной сборки и тестов:** 2  
+- **DV2. Контейнеризация (Docker/Compose):** 2  
+- **DV3. CI: базовый pipeline и стабильный прогон:** 2  
+- **DV4. Артефакты и логи конвейера:** 2  
+- **DV5. Секреты и конфигурация окружения (гигиена):** 2  
 
-**Итог DV (сумма):** __/10
+**Итог DV (сумма):** 10/10
