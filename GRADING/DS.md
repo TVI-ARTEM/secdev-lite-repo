@@ -1,33 +1,58 @@
 # DS - Отчёт «DevSecOps-сканы и харднинг»
 
-> Этот файл - **индивидуальный**. Его проверяют по **rubric_DS.md** (5 критериев × {0/1/2} → 0-10).
-> Подсказки помечены `TODO:` - удалите после заполнения.
-> Все доказательства/скрины кладите в **EVIDENCE/** и ссылайтесь на конкретные файлы/якоря.
-
----
-
 ## 0) Мета
 
-- **Проект (опционально BYO):** TODO: ссылка / «учебный шаблон»
-- **Версия (commit/date):** TODO: abc123 / YYYY-MM-DD
-- **Кратко (1-2 предложения):** TODO: что сканируется и какие меры харднинга планируются
+- **Проект (опционально BYO):** [учебный шаблон (secdev-09-12)](https://github.com/TVI-ARTEM/secdev-09-12)
+- **Версия (commit/date):** `v1` / 2025-10-26
+- **Кратко (1-2 предложения):** происходит `SBOM` + `SCA`, `SAST`, `DAST` и `IaC & Container Security` сканирования. Осуществляется устранения уязвимостей зависимостей, частичное устранение DAST алертов + частичное применение хардингов на основе  `IaC & Container Security` сканирования.
 
 ---
 
 ## 1) SBOM и уязвимости зависимостей (DS1)
 
-- **Инструмент/формат:** TODO: Syft/Grype/OSV; CycloneDX/SPDX
-- **Как запускал:**
+- **Инструмент/формат:** `Syft`, `Grype`; `CycloneDX`
+- **Как запускал (локально):**
 
   ```bash
-  syft dir:. -o cyclonedx-json > EVIDENCE/sbom-YYYY-MM-DD.json
-  grype sbom:EVIDENCE/sbom-YYYY-MM-DD.json --fail-on high -o json > EVIDENCE/deps-YYYY-MM-DD.json
+  // SBOM  сканирование
+  docker run --rm -v $PWD:/work -w /work anchore/syft:latest packages dir:. -o cyclonedx-json > EVIDENCE/S09/sbom.json
+
+  // SCA сканирование
+  docker run --rm -v $PWD:/work -w /work anchore/grype:latest sbom:/work/EVIDENCE/S09/sbom.json -o json > EVIDENCE/S09/sca_report.json
+
+
+  // Человекочитаемый вывод:
+  echo "# SCA summary" > EVIDENCE/S09/sca_summary.md
+  jq -r '
+    .matches
+    | map({
+        artifact_name: (.artifact.name // "N/A"),
+        artifact_version: (.artifact.version // "N/A"),
+        vulnerability_id: (.vulnerability.id // "N/A"),
+        description: (.vulnerability.description // "N/A"),
+        fix_versions: (
+          (.vulnerability.fix.versions // [])
+          | if length == 0 then ["N/A"] else . end
+          | join(", ")
+        )
+      })
+    | unique
+    | map(
+        "Artifact: " + .artifact_name
+        + ", version: " + .artifact_version
+        + ". Vulnerability - " + .vulnerability_id
+        + ": " + .description
+        + ". Fixed: " + .fix_versions
+      )
+    | join("\n")
+  ' EVIDENCE/S09/sca_report.json >> EVIDENCE/S09/sca_summary.md
+  
   ```
 
-- **Отчёты:** `EVIDENCE/sbom-YYYY-MM-DD.json`, `EVIDENCE/deps-YYYY-MM-DD.json`
-- **Выводы (кратко):** TODO: сколько Critical/High, ключевые пакеты/лицензии
-- **Действия:** TODO: что исправлено/обновлено **или** что временно подавлено (ниже в триаже)
-- **Гейт по зависимостям:** TODO: правило в словах (например, «Critical=0; High≤1»)
+- **Отчёты:** `EVIDENCE/S09/v*/sbom.json`, `EVIDENCE/S09/v*/sca_report.json`, `EVIDENCE/S09/v*/sca_summary.json`,
+- **Выводы:** После `SCA` сканирования уязвимостей было выявлено 4 уязвимости Medium уровня
+- **Действия:** обновлен package jinja2 с 3.1.6, с actions/download-artifact@v4 на actions/download-artifact@v4.1.3
+- **Гейт по зависимостям:** Critical=0; High=0
 
 ---
 
@@ -35,43 +60,53 @@
 
 ### 2.1 SAST
 
-- **Инструмент/профиль:** TODO: semgrep?
-- **Как запускал:**
+- **Инструмент/профиль:** semgrep
+- **Как запускал (локально):**
 
   ```bash
-  semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-YYYY-MM-DD.json
+  docker run --rm \
+            -v "$PWD:/src" \
+            returntocorp/semgrep:latest semgrep ci \
+              --config p/security-audit \
+              --config /src/security/semgrep/rules.yml \
+              --sarif \
+              --output /src/EVIDENCE/S10/semgrep.sarif \
+              --metrics=off
   ```
 
-- **Отчёт:** `EVIDENCE/sast-YYYY-MM-DD.*`
-- **Выводы:** TODO: 1-2 ключевых находки (TP/FP), области риска
+- **Отчёт:** `EVIDENCE/S10/semgrep.sarif`
+- **Выводы:** не обнаружено проблем.
+- **Гейт по зависимостям:** Critical=0;
 
 ### 2.2 Secrets scanning
 
-- **Инструмент:** TODO: gitleaks?
-- **Как запускал:**
+- **Инструмент:** gitleaks
+- **Как запускал (локально):**
 
   ```bash
-  gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD.json
-  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD-history.json
+  docker run --rm -v $PWD:/repo zricethezav/gitleaks:latest detect \
+            --config=/repo/security/.gitleaks.toml \
+            --source=/repo \
+            --report-format=json \
+            --report-path=/repo/EVIDENCE/S10/gitleaks.json
   ```
 
-- **Отчёт:** `EVIDENCE/secrets-YYYY-MM-DD.*`
-- **Выводы:** TODO: есть ли истинные срабатывания; меры (ревок/ротация/очистка истории)
+- **Отчёт:** `EVIDENCE/S10/gitleaks.json`
+- **Выводы:** не обнаружено проблем.
+- **Гейт по зависимостям:** секретов не должно быть обнаружено
 
 ---
 
-## 3) DAST **или** Policy (Container/IaC) (DS3)
+## 3) DAST и Policy (Container/IaC) (DS3)
 
-> Для «1» достаточно одного из классов; на «2» - желательно оба **или** один глубже (настроенный профиль/таргет).
+### DAST (лайт)
 
-### Вариант A - DAST (лайт)
-
-- **Инструмент/таргет:** TODO (локальный стенд/демо-контейнер допустим)
+- **Инструмент/таргет:** zap
 - **Как запускал:**
 
   ```bash
-  zap-baseline.py -t http://127.0.0.1:8080 -m 3 \
-    -r EVIDENCE/dast-YYYY-MM-DD.html -J EVIDENCE/dast-YYYY-MM-DD.json
+  docker run --rm --network host -v $PWD/zap-work:/zap/wrk zaproxy/zap-stable zap-baseline.py -t http://localhost:8080 -r zap_baseline.html -J zap_baseline.json -d || true
+  mv zap-work/zap_baseline.* EVIDENCE/S11/
   ```
 
 - **Отчёт:** `EVIDENCE/dast-YYYY-MM-DD.pdf#alert-...`
