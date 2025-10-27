@@ -52,7 +52,8 @@
 - **Отчёты:** `EVIDENCE/S09/v*/sbom.json`, `EVIDENCE/S09/v*/sca_report.json`, `EVIDENCE/S09/v*/sca_summary.json`,
 - **Выводы:** После `SCA` сканирования уязвимостей было выявлено 4 уязвимости Medium уровня
 - **Действия:** обновлен package jinja2 с 3.1.6, с actions/download-artifact@v4 на actions/download-artifact@v4.1.3
-- **Гейт по зависимостям:** Critical=0; High=0
+- **Quality gate:** `--fail-on critical` + `Critical=0, High<=1` в `EVIDENCE/S09ci-s09-sbom-sca.yml`.
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464140
 
 ---
 
@@ -76,7 +77,8 @@
 
 - **Отчёт:** `EVIDENCE/S10/semgrep.sarif`
 - **Выводы:** не обнаружено проблем.
-- **Гейт по зависимостям:** Critical=0;
+- **Quality gate:** `EVIDENCE/S10ci-s10-sast-secrets.yml` проверяет `Semgrep critical = 0`, иначе `exit 1`.
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464145
 
 ### 2.2 Secrets scanning
 
@@ -93,7 +95,8 @@
 
 - **Отчёт:** `EVIDENCE/S10/gitleaks.json`
 - **Выводы:** не обнаружено проблем.
-- **Гейт по зависимостям:** секретов не должно быть обнаружено
+- **Quality gate:** `EVIDENCE/S10/ci-s10-sast-secrets.yml` — `Gitleaks findings = 0`.
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464145
 
 ---
 
@@ -109,108 +112,90 @@
   mv zap-work/zap_baseline.* EVIDENCE/S11/
   ```
 
-- **Отчёт:** `EVIDENCE/dast-YYYY-MM-DD.pdf#alert-...`
-- **Выводы:** TODO: 1-2 meaningful наблюдения
+- **Отчёт:** `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`, HTML отчеты в `EVIDENCE/S11/v*/zap_baseline.html`.
+- **Выводы:** v1 — 2 Medium (CSP header not set, Missing Anti-clickjacking header) + Low. После внедрения middleware с CSP/CSPP/Cache-Control (см. `EVIDENCE/S11/v2/main.py`) повторный прогон (v2) = только informational (Non-Storable Content, Potential XSS info).
+- **Quality gate:** `EVIDENCE/S11/ci-s11-dast.yml` — fail если `High>0` или `Critical>0`.
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464136
 
-### Вариант B - Policy / Container / IaC
+### Policy / Container / IaC
 
 - **Инструмент(ы):** TODO (trivy config / checkov / conftest и т.п.)
-- **Как запускал:**
+- **Как запускал (локально):**
 
   ```bash
-  trivy image --severity HIGH,CRITICAL --exit-code 1 <image:tag> > EVIDENCE/policy-YYYY-MM-DD.txt
-  trivy config . --severity HIGH,CRITICAL --exit-code 1 --format table > EVIDENCE/trivy-YYYY-MM-DD.txt
-  checkov -d . -o cli > EVIDENCE/checkov-YYYY-MM-DD.txt
+  docker run --rm -i hadolint/hadolint hadolint -f json - < Dockerfile > EVIDENCE/S12/hadolint.json || true
+  docker run --rm -v $PWD:/src bridgecrew/checkov:latest -d /src/iac -o json > EVIDENCE/S12/checkov.json || true
+  docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $PWD:/work \
+            aquasec/trivy:latest image \
+            --format json \
+            --output /work/EVIDENCE/S12/trivy.json \
+            --ignore-unfixed \
+            s09s12-app:ci || true
   ```
 
-- **Отчёт(ы):** `EVIDENCE/policy-YYYY-MM-DD.txt`, `EVIDENCE/trivy-YYYY-MM-DD.txt`, …
-- **Выводы:** TODO: какие правила нарушены/исправлены
+- **Отчёты:** Trivy/Hadolint/Checkov JSON — `EVIDENCE/S12/v1/*`, `EVIDENCE/S12/v2/*`.  
+- **Выводы:**
+  - Trivy: фокус на приложении — 2 High (starlette) остаются, помечены как backlog.  
+  - Checkov: фэйлов 17 → 13 благодаря `readOnlyRootFilesystem`, `runAsNonRoot`, CPU/Memory limits.  
+  - Hadolint: 0 нарушений (Dockerfile вычищен).  
+- **Quality gate:** `EVIDENCE/S12/ci-s12-iac-container.yml` — `Checkov violations = 0` (на данный момент в dev ветке fail)
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464141
 
 ---
 
 ## 4) Харднинг (доказуемый) (DS4)
 
-Отметьте **реально применённые** меры, приложите доказательства из `EVIDENCE/`.
-
-- [ ] **Контейнер non-root / drop capabilities** → Evidence: `EVIDENCE/policy-YYYY-MM-DD.txt#no-root`
-- [ ] **Rate-limit / timeouts / retry budget** → Evidence: `EVIDENCE/load-after.png`
-- [ ] **Input validation** (типы/длины/allowlist) → Evidence: `EVIDENCE/sast-YYYY-MM-DD.*#input`
-- [ ] **Secrets handling** (нет секретов в git; хранилище секретов) → Evidence: `EVIDENCE/secrets-YYYY-MM-DD.*`
-- [ ] **HTTP security headers / CSP / HTTPS-only** → Evidence: `EVIDENCE/security-headers.txt`
-- [ ] **AuthZ / RLS / tenant isolation** → Evidence: `EVIDENCE/rls-policy.txt`
-- [ ] **Container/IaC best-practice** (минимальная база, readonly fs, …) → Evidence: `EVIDENCE/trivy-YYYY-MM-DD.txt#cfg`
-
-> Для «1» достаточно ≥2 уместных мер с доказательствами; для «2» - ≥3 и хотя бы по одной показать эффект «до/после».
+- [x] **Контейнер non-root / drop capabilities** -> Evidence: `EVIDENCE/S12/v2/Dockerfile`, `EVIDENCE/S12/v2/checkov.json`. Завел системного пользователя `app`, переключаем `USER`, в Kubernetes включены `runAsNonRoot`, `readOnlyRootFilesystem`. Checkov снизил `CKV_K8S_23/22`.
+- [x] **Secrets handling** (нет секретов в git; хранилище секретов) -> Evidence: `EVIDENCE/S10/gitleaks.json`, `EVIDENCE/S10/ci-s10-sast-secrets.yml`. Отчет пустой, quality gate запрещает merge при утечках.
+- [x] **HTTP security headers / CSP / HTTPS-only** -> Evidence: `EVIDENCE/S11/v2/main.py`, `EVIDENCE/S11/v2/zap_baseline.json`. Middleware выставляет CSP/XFO/COEP, ZAP Medium-alert'ы исчезли (см. раздел 7).
+- [x] **Container/IaC best-practice** (минимальная база, readonly fs, …) -> Evidence: `EVIDENCE/S12/v2/trivy.json`, `EVIDENCE/S12/v2/checkov.json`. Использую slim-образ, `readOnlyRootFilesystem`, лимиты CPU/Memory; количество policy-нарушений сокращено 17->13.
 
 ---
 
 ## 5) Quality-gates и проверка порогов (DS5)
 
-- **Пороговые правила (словами):**  
-  Примеры: «SCA: Critical=0; High≤1», «SAST: Critical=0», «Secrets: 0 истинных находок», «Policy: Violations=0».
-- **Как проверяются:**  
-  - Ручной просмотр (какие файлы/строки) **или**  
-  - Автоматически:  (скрипт/job, условие fail при нарушении)
-
-    ```bash
-    SCA: grype ... --fail-on high
-    SAST: semgrep --config p/ci --severity=high --error
-    Secrets: gitleaks detect --exit-code 1
-    Policy/IaC: trivy (image|config) --severity HIGH,CRITICAL --exit-code 1
-    DAST: zap-baseline.py -m 3 (фейл при High)
-    ```
-
-- **Ссылки на конфиг/скрипт (если есть):**
-
-  ```bash
-  GitHub Actions: .github/workflows/security.yml (jobs: sca, sast, secrets, policy, dast)
-  или GitLab CI: .gitlab-ci.yml (stages: security; jobs: sca/sast/secrets/policy/dast)
-  ```
+- **Пороговые правила (конкретные проверки):**  
+  - SCA: `EVIDENCE/S09/ci-s09-sbom-sca.yml:64-86` — `--fail-on critical`, `Critical=0`, `High<=1` (см. блок `Enforce SCA quality gate`).  
+  - SAST: `EVIDENCE/S10/ci-s10-sast-secrets.yml:54:94` — Semgrep критичность `>0` -> `exit 1`.  
+  - Secrets: `EVIDENCE/S10/ci-s10-sast-secrets.yml:54:94` — Gitleaks `length > 0` -> fail.  
+  - DAST: `EVIDENCE/S11/ci-s11-dast.yml:44-86` — ZAP High/Critical >0 -> fail.  
+  - Policy: `EVIDENCE/S12/ci-s12-iac-container.yml:55-85` — Checkov `FAILED_POLICIES > 0` -> fail.
+- **Автоматизация:** каждый workflow скачивает артефакты через `actions/download-artifact@v4.1.3` и применяет `jq`/bash для подсчета. Логика закончена `exit 1`, что приводит к падению pipeline при нарушении порога.
+- **До/после:** см. раздел 7, итерации зафиксированы в отчетах: `EVIDENCE/S09/v3/sca_report.json` (High->0), `EVIDENCE/S11/v2/zap_baseline.json` (Medium->0), `EVIDENCE/S12/v2/checkov.json` (17->13).
 
 ---
 
 ## 6) Триаж-лог (fixed / suppressed / open)
 
-| ID/Anchor       | Класс     | Severity | Статус     | Действие | Evidence                               | Ссылка на фикс/исключение         | Комментарий / owner / expiry |
-|-----------------|-----------|----------|------------|----------|----------------------------------------|-----------------------------------|------------------------------|
-| CVE-2024-XXXX   | SCA       | High     | fixed      | bump     | `EVIDENCE/deps-YYYY-MM-DD.json#CVE`    | `commit abc123`                   | -                            |
-| ZAP-123         | DAST      | Medium   | suppressed | ignore   | `EVIDENCE/dast-YYYY-MM-DD.pdf#123`     | `EVIDENCE/suppressions.yml#zap`   | FP; owner: ФИО; expiry: 2025-12-31 |
-| SAST-77         | SAST      | High     | open       | backlog  | `EVIDENCE/sast-YYYY-MM-DD.*#77`        | issue-link                        | план фикса в релизе N        |
-
-> Для «2» по DS5 обязательно указывать **owner/expiry/обоснование** для подавлений.
+| ID/Anchor                     | Канал    | Severity | Статус    | Мера / комментарий                         | Evidence                                                                                                  |
+|-------------------------------|----------|----------|-----------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| GHSA-cxww-7g56-2vh6           | SCA      | High     | fixed     | Bump `actions/download-artifact` -> v4.1.3  | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S10/ci-s10-sast-secrets.yml`       |
+| GHSA-gmj6-6f8f-6699 / q2x7 / cpwx | SCA | High | fixed | Bump `jinja2` -> 3.1.6                      | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S09/v3/sbom.json`, `EVIDENCE/S09/v3/requirements.txt`   | 
+| ZAP-CSP-HDR                   | DAST     | Medium   | fixed     | Middleware с CSP/XFO/COEP                  | `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`, `EVIDENCE/S11/v2/main.py` |
+| CKV2_K8S_6                    | Policy   | High     | open      | Требуется Kubernetes NetworkPolicy         | `EVIDENCE/S12/v2/checkov.json`                                                                            |
 
 ---
 
 ## 7) Эффект «до/после» (метрики) (DS4/DS5)
 
-| Контроль/Мера | Метрика                 | До   | После | Evidence (до), (после)                          |
-|---------------|-------------------------|-----:|------:|-------------------------------------------------|
-| Зависимости   | #Critical / #High (SCA) | TODO | 0 / ≤1| `EVIDENCE/deps-before.json`, `deps-after.json`  |
-| SAST          | #Critical / #High       | TODO | 0 / ≤1| `EVIDENCE/sast-before.*`, `sast-after.*`        |
-| Secrets       | Истинные находки        | TODO | 0     | `EVIDENCE/secrets-*.json`                       |
-| Policy/IaC    | Violations              | TODO | 0     | `EVIDENCE/checkov-before.txt`, `checkov-after.txt` |
+| Контроль/Мера | Метрика                 |  До  | После | Evidence                                                            |
+|---------------|-------------------------|-----:|------:|-----------------------------------------------------------------------------------------|
+| Зависимости   | #Critical / #High (SCA) | 0 / 1| 0 / 0 | `EVIDENCE/S09/v2/sca_report.json`, `EVIDENCE/S09/v3/sca_report.json`                    |
+| SAST          | #Critical / #High       | 0 / 0| 0 / 0 | `EVIDENCE/S10/semgrep.sarif1`     |
+| Secrets       | Истинные находки        |   0  |   0   | `EVIDENCE/S10/gitleaks.json` |
+| DAST          | High / Medium           | 0 / 2| 0 / 0 | `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`                 |
+| Policy/IaC    | Violations (Checkov)    |  17  |  13   | `EVIDENCE/S12/v1/checkov.json`, `EVIDENCE/S12/v2/checkov.json`                           |
 
 ---
 
-## 8) Связь с TM и DV (сквозная нитка)
+## 8) Самооценка по рубрике DS (0/1/2)
 
-- **Закрываемые угрозы из TM:** TODO: T-001, T-005, … (ссылки на таблицу трассировки TM)
-- **Связь с DV:** TODO: какие сканы/проверки встроены или будут встраиваться в pipeline
+- **DS1. SBOM и SCA:** 2  
+- **DS2. SAST + Secrets:** 2  
+- **DS3. DAST или Policy (Container/IaC):** 2  
+- **DS4. Харднинг (доказуемый):** 2  
+- **DS5. Quality-gates, триаж и «до/после»:** 2  
 
----
-
-## 9) Out-of-Scope
-
-- TODO: что сознательно не сканировалось сейчас и почему (1-3 пункта)
-
----
-
-## 10) Самооценка по рубрике DS (0/1/2)
-
-- **DS1. SBOM и SCA:** [ ] 0 [ ] 1 [ ] 2  
-- **DS2. SAST + Secrets:** [ ] 0 [ ] 1 [ ] 2  
-- **DS3. DAST или Policy (Container/IaC):** [ ] 0 [ ] 1 [ ] 2  
-- **DS4. Харднинг (доказуемый):** [ ] 0 [ ] 1 [ ] 2  
-- **DS5. Quality-gates, триаж и «до/после»:** [ ] 0 [ ] 1 [ ] 2  
-
-**Итог DS (сумма):** __/10
+**Итог DS (сумма):** 10/10
