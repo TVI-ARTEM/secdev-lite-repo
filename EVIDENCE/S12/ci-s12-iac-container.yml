@@ -1,0 +1,76 @@
+name: S12 - IaC & Container Security
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'Dockerfile'
+      - 'iac/**'
+      - '.github/workflows/ci-s12-iac-container.yml'
+jobs:
+  s12:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure evidence dirs
+        run: mkdir -p EVIDENCE/S12
+
+      - name: Build image
+        run: docker build -t s09s12-app:ci .
+
+      - name: Hadolint Dockerfile (JSON)
+        run: |
+          docker run --rm -i hadolint/hadolint hadolint -f json - < Dockerfile > EVIDENCE/S12/hadolint.json || true
+
+      - name: Checkov (iac/)
+        run: |
+          docker run --rm -v $PWD:/src bridgecrew/checkov:latest -d /src/iac -o json > EVIDENCE/S12/checkov.json || true
+
+      - name: Trivy image (JSON)
+        run: |
+          docker run --rm \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            -v $PWD:/work \
+            aquasec/trivy:latest image \
+            --format json \
+            --output /work/EVIDENCE/S12/trivy.json \
+            --ignore-unfixed \
+            s09s12-app:ci || true
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: S12_EVIDENCE
+          path: EVIDENCE/S12
+
+  s12-policy-gate:
+    needs: s12
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4.1.3
+        with:
+          name: S12_EVIDENCE
+          path: EVIDENCE/S12
+      - name: Enforce policy quality gate
+        run: |
+          set -euo pipefail
+          CHECKOV_REPORT="EVIDENCE/S12/checkov.json"
+          if [ ! -s "${CHECKOV_REPORT}" ]; then
+            echo "::error::Missing Checkov report at ${CHECKOV_REPORT}"
+            exit 1
+          fi
+          FAILED_POLICIES=$(jq -r '
+            def failed_count:
+              (.summary.failed // ((.results.failed_checks // []) | length));
+            if type == "array" then
+              (map(failed_count) | add)
+            else
+              failed_count
+            end
+          ' "${CHECKOV_REPORT}")
+          echo "Checkov policy violations: ${FAILED_POLICIES}"
+          if [ "${FAILED_POLICIES}" -gt 0 ]; then
+            echo "::error::Policy quality gate failed: expected 0 violations, found ${FAILED_POLICIES}"
+            exit 1
+          fi
+          echo "Policy quality gate passed (violations = 0)."
