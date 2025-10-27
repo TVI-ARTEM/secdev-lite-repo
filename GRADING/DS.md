@@ -182,8 +182,8 @@
 
 | Контроль/Мера | Метрика                 |  До  | После | Evidence                                                            |
 |---------------|-------------------------|-----:|------:|-----------------------------------------------------------------------------------------|
-| Зависимости   | #Critical / #High (SCA) | 0 / 1| 0 / 0 | `EVIDENCE/S09/v2/sca_report.json`, `EVIDENCE/S09/v3/sca_report.json`                    |
-| SAST          | #Critical / #High       | 0 / 0| 0 / 0 | `EVIDENCE/S10/semgrep.sarif1`     |
+| Зависимости   | Critical / High (SCA) | 0 / 1| 0 / 0 | `EVIDENCE/S09/v2/sca_report.json`, `EVIDENCE/S09/v3/sca_report.json`                    |
+| SAST          | Critical / High       | 0 / 0| 0 / 0 | `EVIDENCE/S10/semgrep.sarif1`     |
 | Secrets       | Истинные находки        |   0  |   0   | `EVIDENCE/S10/gitleaks.json` |
 | DAST          | High / Medium           | 0 / 2| 0 / 0 | `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`                 |
 | Policy/IaC    | Violations (Checkov)    |  17  |  13   | `EVIDENCE/S12/v1/checkov.json`, `EVIDENCE/S12/v2/checkov.json`                           |
