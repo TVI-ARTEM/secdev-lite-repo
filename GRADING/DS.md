@@ -119,7 +119,7 @@
 
 ### Policy / Container / IaC
 
-- **Инструмент(ы):** TODO (trivy config / checkov / conftest и т.п.)
+- **Инструмент(ы):** trivy config, checkov, hadolint
 - **Как запускал (локально):**
 
   ```bash
