@@ -1,0 +1,86 @@
+name: S09 - SBOM & SCA
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '**/*.py'
+      - 'requirements.txt'
+      - '.github/workflows/ci-s09-sbom-sca.yml'
+jobs:
+  s09:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ensure evidence dirs
+        run: mkdir -p EVIDENCE/S09
+
+      - name: Generate SBOM (Syft CycloneDX)
+        run: |
+          docker run --rm -v $PWD:/work -w /work anchore/syft:latest packages dir:. -o cyclonedx-json > EVIDENCE/S09/sbom.json
+
+      - name: SCA Scan (Grype)
+        run: |
+          set -e
+          docker run --rm -v $PWD:/work -w /work anchore/grype:latest sbom:/work/EVIDENCE/S09/sbom.json --fail-on critical -o json > EVIDENCE/S09/sca_report.json
+          echo "# SCA summary" > EVIDENCE/S09/sca_summary.md
+          jq -r '
+            .matches
+            | map({
+                artifact_name: (.artifact.name // "N/A"),
+                artifact_version: (.artifact.version // "N/A"),
+                vulnerability_id: (.vulnerability.id // "N/A"),
+                description: (.vulnerability.description // "N/A"),
+                fix_versions: (
+                  (.vulnerability.fix.versions // [])
+                  | if length == 0 then ["N/A"] else . end
+                  | join(", ")
+                )
+              })
+            | unique
+            | map(
+                "Artifact: " + .artifact_name
+                + ", version: " + .artifact_version
+                + ". Vulnerability - " + .vulnerability_id
+                + ": " + .description
+                + ". Fixed: " + .fix_versions
+              )
+            | join("\n")
+          ' EVIDENCE/S09/sca_report.json >> EVIDENCE/S09/sca_summary.md || true
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: S09_EVIDENCE
+          path: EVIDENCE/S09
+
+      - name: Display SCA summary
+        if: ${{ always() }}
+        run: cat EVIDENCE/S09/sca_summary.md || true
+
+      - name: Enforce SCA quality gate
+        if: ${{ always() }}
+        run: |
+          set -euo pipefail
+          if [ ! -s EVIDENCE/S09/sca_report.json ]; then
+            echo "::error::Missing SCA report at EVIDENCE/S09/sca_report.json"
+            exit 1
+          fi
+
+          CRITICAL_COUNT=$(jq -r '(.matches // []) | map(select((.vulnerability.severity // "") == "Critical")) | length' EVIDENCE/S09/sca_report.json)
+          HIGH_COUNT=$(jq -r '(.matches // []) | map(select((.vulnerability.severity // "") == "High")) | length' EVIDENCE/S09/sca_report.json)
+
+          echo "Critical vulnerabilities: ${CRITICAL_COUNT}"
+          echo "High vulnerabilities: ${HIGH_COUNT}"
+
+          if [ "${CRITICAL_COUNT}" -gt 0 ]; then
+            echo "::error::SCA quality gate failed: expected 0 critical vulnerabilities, found ${CRITICAL_COUNT}"
+            exit 1
+          fi
+
+          if [ "${HIGH_COUNT}" -gt 1 ]; then
+            echo "::error::SCA quality gate failed: expected at most 1 high vulnerability, found ${HIGH_COUNT}"
+            exit 1
+          fi
+
+          echo "SCA quality gate passed (critical = 0, high <= 1)."
