@@ -169,12 +169,12 @@
 
 ## 6) Триаж-лог (fixed / suppressed / open)
 
-| ID/Anchor                     | Канал    | Severity | Статус    | Мера / комментарий                         | Evidence                                                                                                  |
-|-------------------------------|----------|----------|-----------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------|
-| GHSA-cxww-7g56-2vh6           | SCA      | High     | fixed     | Bump `actions/download-artifact` -> v4.1.3  | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S10/ci-s10-sast-secrets.yml`       |
-| GHSA-gmj6-6f8f-6699 / q2x7 / cpwx | SCA | High | fixed | Bump `jinja2` -> 3.1.6                      | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S09/v3/sbom.json`, `EVIDENCE/S09/v3/requirements.txt`   | 
-| ZAP-CSP-HDR                   | DAST     | Medium   | fixed     | Middleware с CSP/XFO/COEP                  | `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`, `EVIDENCE/S11/v2/main.py` |
-| CKV2_K8S_6                    | Policy   | High     | open      | Требуется Kubernetes NetworkPolicy         | `EVIDENCE/S12/v2/checkov.json`                                                                            |
+| Канал    | Severity | Статус    | Мера / комментарий                         | Evidence                                                                                                  |
+|----------|----------|-----------|--------------------------------------------|-----------------------------------------------------------------------------------------------------------|
+| SCA      | High     | fixed     | Bump `actions/download-artifact` -> v4.1.3  | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S10/ci-s10-sast-secrets.yml`       |
+| SCA | High | fixed | Bump `jinja2` -> 3.1.6                      | `EVIDENCE/S09/v2/sca_summary.md`, `EVIDENCE/S09/v3/sbom.json`, `EVIDENCE/S09/v3/requirements.txt`   | 
+| DAST     | Medium   | fixed     | Middleware с CSP/XFO/COEP                  | `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`, `EVIDENCE/S11/v2/main.py` |
+| Policy   | High     | open      | Требуется Kubernetes NetworkPolicy         | `EVIDENCE/S12/v2/checkov.json`                                                                            |
 
 ---
 
