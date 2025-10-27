@@ -52,7 +52,7 @@
 - **Отчёты:** `EVIDENCE/S09/v*/sbom.json`, `EVIDENCE/S09/v*/sca_report.json`, `EVIDENCE/S09/v*/sca_summary.json`,
 - **Выводы:** После `SCA` сканирования уязвимостей было выявлено 4 уязвимости Medium уровня
 - **Действия:** обновлен package jinja2 с 3.1.6, с actions/download-artifact@v4 на actions/download-artifact@v4.1.3
-- **Quality gate:** `--fail-on critical` + `Critical=0, High<=1` в `EVIDENCE/S09ci-s09-sbom-sca.yml`.
+- **Quality gate:** `--fail-on critical` + `Critical=0, High<=1` в `EVIDENCE/S09/ci-s09-sbom-sca.yml`.
 - **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464140
 
 ---
