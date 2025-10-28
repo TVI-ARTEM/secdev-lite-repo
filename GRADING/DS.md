@@ -55,8 +55,7 @@
 - **Выводы:** После `SCA` сканирования уязвимостей было выявлено 4 уязвимости Medium уровня
 - **Действия:** обновлен package jinja2 с 3.1.6, с actions/download-artifact@v4 на actions/download-artifact@v4.1.3
 - **Quality gate:** `--fail-on critical` + `Critical=0, High<=1` в `EVIDENCE/S09/ci-s09-sbom-sca.yml`.
-- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464140
-
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/workflows/ci-s09-sbom-sca.yml
 ---
 
 ## 2) SAST и Secrets (DS2)
@@ -80,7 +79,7 @@
 - **Отчёт:** `EVIDENCE/S10/semgrep.sarif`
 - **Выводы:** не обнаружено проблем.
 - **Quality gate:** `EVIDENCE/S10ci-s10-sast-secrets.yml` проверяет `Semgrep critical = 0`, иначе `exit 1`.
-- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464145
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/workflows/ci-s10-sast-secrets.yml
 
 ### 2.2 Secrets scanning
 
@@ -98,7 +97,7 @@
 - **Отчёт:** `EVIDENCE/S10/gitleaks.json`
 - **Выводы:** не обнаружено проблем.
 - **Quality gate:** `EVIDENCE/S10/ci-s10-sast-secrets.yml` — `Gitleaks findings = 0`.
-- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464145
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/workflows/ci-s10-sast-secrets.yml
 
 ---
 
@@ -117,7 +116,7 @@
 - **Отчёт:** `EVIDENCE/S11/v1/zap_baseline.json`, `EVIDENCE/S11/v2/zap_baseline.json`, HTML отчеты в `EVIDENCE/S11/v*/zap_baseline.html`.
 - **Выводы:** v1 — 2 Medium (CSP header not set, Missing Anti-clickjacking header) + Low. После внедрения middleware с CSP/CSPP/Cache-Control (см. `EVIDENCE/S11/v2/main.py`) повторный прогон (v2) = только informational (Non-Storable Content, Potential XSS info).
 - **Quality gate:** `EVIDENCE/S11/ci-s11-dast.yml` — fail если `High>0` или `Critical>0`.
-- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464136
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/workflows/ci-s11-dast.yml
 
 ### Policy / Container / IaC
 
@@ -143,7 +142,7 @@
   - Checkov: фэйлов 17 → 13 благодаря `readOnlyRootFilesystem`, `runAsNonRoot`, CPU/Memory limits.  
   - Hadolint: 0 нарушений (Dockerfile вычищен).  
 - **Quality gate:** `EVIDENCE/S12/ci-s12-iac-container.yml` — `Checkov violations = 0` (на данный момент в dev ветке fail)
-- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/runs/18823464141
+- **Запуски:** https://github.com/TVI-ARTEM/secdev-09-12/actions/workflows/ci-s12-iac-container.yml
 
 ---
 
